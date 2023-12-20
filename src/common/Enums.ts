@@ -38,9 +38,8 @@ export enum ObjectSize {
 
 export enum ProfileValue {
     ADMIN_VALUE = 1,
-    PATIENT_VALUE = 2,
-    PSYCHOLOGIST_VALUE = 3,
-    ATTENDANT_VALUE = 4
+    USER_VALUE = 2
+
 
 }
 

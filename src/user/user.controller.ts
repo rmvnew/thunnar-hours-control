@@ -25,7 +25,7 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_PSYCHOLOGIST_ATTENDANT))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     description: `# Esta rota adiciona um novo usuário.
     Tipo: Autenticada. 
@@ -44,7 +44,7 @@ export class UserController {
 
 
   @Get()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_PSYCHOLOGIST_ATTENDANT))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     description: `# Esta rota busca todos usuários.
     Tipo: Autenticada. 
@@ -108,13 +108,13 @@ export class UserController {
     @Query('email') email: string
   ) {
 
-
     return this.userService.recoverCode(email)
+
   }
 
 
   @Get('/userEmail')
-  @UseGuards(PermissionGuard(AccessProfile.ALL))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
   @ApiOperation({
     description: `# Esta rota busca um usuário pelo email.
     Tipo: Autenticada. 
@@ -126,27 +126,6 @@ export class UserController {
 
     return this.userService.findUserByEmail(email)
   }
-
-
-
-
-
-  @Get('/patient-register')
-  @UseGuards(PermissionGuard(AccessProfile.ALL))
-  @ApiOperation({
-    description: `# Esta rota retorna verdadeiro se o cadastro estiver com dados suficientes para o paciente iniciar o processo de atendimento.
-    Tipo: Autenticada. 
-    Acesso: [Todos]` })
-  @ApiQuery({ name: 'email', required: true, description: '### E-mail do paciente. ' })
-  async checkingRegisterCompleteByEmail(
-    @Query('email') email: string
-  ) {
-    return this.userService.checkingRegisterCompleteByEmail(email)
-  }
-
-
-
-
 
 
 
@@ -175,7 +154,7 @@ export class UserController {
   }
 
   @Get('/qrcode-2fa/:id')
-  @UseGuards(PermissionGuard(AccessProfile.ALL))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
   @ApiOperation({
     description: `# Esta rota obtém os dados para gerar o qr-code.
     Descrição: Este qr-code é usado para configurar o aplicativo que gera token.
@@ -190,7 +169,7 @@ export class UserController {
 
 
   @Put('status-code/:id')
-  @UseGuards(PermissionGuard(AccessProfile.ALL))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
   @ApiOperation({
     description: `# Esta rota habilita e desabilita a autenticação de dois fatores.
     Tipo: Autenticada. 
@@ -210,7 +189,7 @@ export class UserController {
 
 
   @Get(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_PSYCHOLOGIST_ATTENDANT))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     description: `# Esta rota busca um usuário pelo Id.
     Tipo: Autenticada. 
@@ -223,7 +202,7 @@ export class UserController {
   }
 
   @Put(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_PSYCHOLOGIST_ATTENDANT))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     description: `# Esta rota atualiza um usuário pelo Id.
     Tipo: Autenticada. 
@@ -241,7 +220,7 @@ export class UserController {
   }
 
   @Patch('/status/:id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_PSYCHOLOGIST))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     description: `# Esta rota habilita e desabilita um usuário pelo Id.
     Tipo: Autenticada. 
@@ -252,14 +231,6 @@ export class UserController {
   ): Promise<UserEntity> {
     return this.userService.changeStatus(id);
   }
-
-
-
-
-
-
-
-
 
 
 

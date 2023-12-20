@@ -19,9 +19,6 @@ export class UserEntity {
     user_date_of_birth: Date
 
     @Column({ nullable: true })
-    google_picture?: string
-
-    @Column({ nullable: true })
     user_phone?: string
 
     @Column({ nullable: true })

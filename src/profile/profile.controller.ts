@@ -24,7 +24,7 @@ export class ProfileController {
   }
 
   @Get()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_PSYCHOLOGIST_ATTENDANT))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   async findAll() {
     return this.profileService.findAll();
   }
@@ -36,7 +36,7 @@ export class ProfileController {
   }
 
   @Get(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_PSYCHOLOGIST_ATTENDANT))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   async findOne(@Param('id') id: string) {
     return this.profileService.findById(+id);
   }
