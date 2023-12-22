@@ -39,9 +39,6 @@ export class UserResponseDto {
     user_profile_id: number
 
     @Expose()
-    user_crp: string
-
-    @Expose()
     address: AddressResponseDto
 
     @Expose()
@@ -50,6 +47,5 @@ export class UserResponseDto {
     @Expose()
     update_at: Date
 
-    @Expose()
-    google_picture?: string
+
 }

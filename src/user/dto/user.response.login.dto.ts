@@ -40,9 +40,6 @@ export class UserResponseLoginDto {
     profile: ProfileResponseDto
 
     @Expose()
-    user_crp: string
-
-    @Expose()
     address: AddressResponseDto
 
     @Expose()

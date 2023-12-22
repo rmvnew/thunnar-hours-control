@@ -249,20 +249,26 @@ export class UserService {
 
 
 
-  async findById(id: string): Promise<UserResponseDto> {
+  async findById(id: string): Promise<any> {
 
     try {
 
-      const user = await this.userRepository.createQueryBuilder('user')
+      return this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
+        .select([
+          'user.user_id',
+          'user.user_name',
+          'user.user_email',
+          'user.user_phone',
+          'user.user_status',
+          'user.user_enrollment',
+          'profile.profile_name',
+          'user.create_at',
+          'user.update_at',
+        ])
         .where('user.user_id = :user_id', { user_id: id })
         .getOne()
 
-      const userDto: UserResponseDto = plainToClass(UserResponseDto, user, {
-        excludeExtraneousValues: true
-      });
-
-      return userDto
 
     } catch (error) {
       this.logger.error(`findById error: ${error.message}`, error.stack)
@@ -272,20 +278,26 @@ export class UserService {
   }
 
 
-  async findByName(name: string): Promise<UserResponseDto> {
+  async findByName(name: string): Promise<any> {
     try {
-      const user = await this.userRepository.findOne({
-        where: {
-          user_name: name
-        }
-      })
 
 
-      const userDto: UserResponseDto = plainToClass(UserResponseDto, user, {
-        excludeExtraneousValues: true
-      })
+      return this.userRepository.createQueryBuilder('user')
+        .leftJoinAndSelect('user.profile', 'profile')
+        .select([
+          'user.user_id',
+          'user.user_name',
+          'user.user_email',
+          'user.user_phone',
+          'user.user_status',
+          'user.user_enrollment',
+          'profile.profile_name',
+          'user.create_at',
+          'user.update_at',
+        ])
+        .where('user.user_name = :name', { name })
+        .getOne()
 
-      return userDto
 
     } catch (error) {
       this.logger.error(`findByName error: ${error.message}`, error.stack)
@@ -308,10 +320,8 @@ export class UserService {
         user_profile_id: profile_id,
         user_date_of_birth,
         user_phone,
-        user_genre,
         user_cpf,
         user_rg,
-        psychologist_id
       } = updateUserDto
 
 
