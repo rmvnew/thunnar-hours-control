@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AddressModule } from 'src/address/address.module';
 import { EmailModule } from 'src/mail/mail.module';
 import { ProfileModule } from 'src/profile/profile.module';
 import { UserEntity } from './entities/user.entity';
@@ -13,9 +12,7 @@ import { UserService } from './user.service';
       UserEntity
     ]),
     EmailModule,
-    AddressModule,
     ProfileModule,
-    AddressModule
 
   ],
   controllers: [UserController],

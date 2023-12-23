@@ -57,7 +57,6 @@ export class Bootstrap {
             const user: CreateUserDto = {
                 user_name: 'sysadmin',
                 user_email: 'sysadmin@email.com',
-                user_phone: '00000000000',
                 user_password: process.env.SYSADMIN_PASS,
                 user_profile_id: currentProfile.profile_id,
                 user_date_of_birth: '01/01/1970'

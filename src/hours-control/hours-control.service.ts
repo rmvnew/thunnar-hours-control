@@ -39,6 +39,9 @@ export class HoursControlService {
   }
 
   async findAll() {
+
+    const current_hours_control = this.houerControlRepository.createQueryBuilder('hour')
+
     return `This action returns all hoursControl`;
   }
 

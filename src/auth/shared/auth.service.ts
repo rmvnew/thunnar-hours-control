@@ -56,9 +56,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials.');
         }
 
-        if (userSaved.user_2fa_active) {
-            this.verify2FACode(user.twoFactorCode, userSaved.user_2fa_secret);
-        }
+
 
         return await this.generateAndReturnTokens(userSaved);
     }

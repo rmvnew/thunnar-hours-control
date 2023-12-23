@@ -13,13 +13,7 @@ export class UserResponseMinDto {
     user_email: string
 
     @Expose()
-    user_phone: string
-
-    @Expose()
     user_status: boolean
-
-    @Expose()
-    user_enrollment: string
 
     @Expose()
     user_profile_name: string

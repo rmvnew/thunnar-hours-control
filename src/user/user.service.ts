@@ -1,13 +1,10 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
 import { cpf } from 'cpf-cnpj-validator';
 // import { faker } from '@faker-js/faker';
 import { faker } from '@faker-js/faker/locale/pt_BR';
 import { Pagination, paginate } from 'nestjs-typeorm-paginate';
-import * as QRCode from 'qrcode';
-import * as speakeasy from 'speakeasy';
-import { AddressService } from 'src/address/address.service';
 import { SortingType, ValidType } from 'src/common/Enums';
 import { Utils } from 'src/common/Utils';
 import { CodeRecoverInterface } from 'src/common/interfaces/email.interface';
@@ -19,7 +16,6 @@ import { ProfileService } from 'src/profile/profile.service';
 import { Repository } from 'typeorm';
 import { FilterUser } from './dto/Filter.user';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Qrcode2fa } from './dto/qrcode.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user.response.dto';
 import { UserResponseLoginDto } from './dto/user.response.login.dto';
@@ -37,7 +33,6 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
     private readonly profileService: ProfileService,
     private readonly mailservice: MailService,
-    private readonly addressService: AddressService
 
 
   ) { }
@@ -109,9 +104,6 @@ export class UserService {
       user.profile = profile
       user.user_status = true
       user.user_first_access = true
-      user.setTwoFactorSecret()
-      user.user_enrollment = Utils.getInstance().getEnrollmentCode()
-      user.user_2fa_active = false
 
       const dateParts = user_date_of_birth.split("/");
       user.user_date_of_birth = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
@@ -259,9 +251,7 @@ export class UserService {
           'user.user_id',
           'user.user_name',
           'user.user_email',
-          'user.user_phone',
           'user.user_status',
-          'user.user_enrollment',
           'profile.profile_name',
           'user.create_at',
           'user.update_at',
@@ -288,9 +278,7 @@ export class UserService {
           'user.user_id',
           'user.user_name',
           'user.user_email',
-          'user.user_phone',
           'user.user_status',
-          'user.user_enrollment',
           'profile.profile_name',
           'user.create_at',
           'user.update_at',
@@ -319,9 +307,7 @@ export class UserService {
         user_email,
         user_profile_id: profile_id,
         user_date_of_birth,
-        user_phone,
-        user_cpf,
-        user_rg,
+
       } = updateUserDto
 
 
@@ -374,23 +360,6 @@ export class UserService {
         }
         user.profile = profile
       }
-
-
-
-
-      if (user_phone) {
-        user.user_phone = user_phone
-      }
-
-
-
-      if (user_cpf) {
-        user.user_cpf = user_cpf
-      }
-      if (user_rg) {
-        user.user_rg = user_rg
-      }
-
 
 
       const [day, month, year] = user_date_of_birth.split("/")
@@ -646,63 +615,6 @@ export class UserService {
     return randomNumber
   }
 
-
-
-
-
-  async generate2FAQRCode(user_id: string): Promise<string> {
-
-    const user = await this.userRepository.findOne({
-      where: {
-        user_id: user_id
-      }
-    })
-
-    const otpauth = speakeasy.otpauthURL({
-      secret: user.user_2fa_secret,
-      label: `HelPsi:${user.user_email}`,
-      algorithm: 'sha1'
-    });
-
-    return QRCode.toDataURL(otpauth);
-  }
-
-
-
-  async generate2fa(user_id: string, qrcode2fa: Qrcode2fa) {
-    try {
-      const { status } = qrcode2fa
-
-      const user = await this.userRepository.findOne({
-        where: {
-          user_id: user_id
-        }
-      })
-
-      status ? user.setTwoFactorSecret() : user.user_2fa_secret = ''
-      user.user_2fa_active = status
-
-      await this.userRepository.save(user)
-
-      const customPromisse = new Promise((resolve) => {
-        if (status === true) {
-          // console.log('1');
-          resolve(this.generate2FAQRCode(user_id))
-        } else {
-          // console.log('2');
-          resolve('Authenticação de dois fatores desabilitada')
-        }
-      })
-
-      return customPromisse
-
-    } catch (error) {
-      throw new HttpException({
-        status: HttpStatus.BAD_REQUEST,
-        error: 'Erro ao tentar gerar 2FA',
-      }, HttpStatus.BAD_REQUEST);
-    }
-  }
 
 
 

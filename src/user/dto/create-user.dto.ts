@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, Length, Validate } from 'class-validator';
-import { CreateAddressDto } from 'src/address/dto/create-address.dto';
 import { IsValidAgeConstraint } from './isValidAgeConstraint';
 
 export class CreateUserDto {
@@ -12,10 +11,6 @@ export class CreateUserDto {
     @ApiProperty()
     @IsNotEmpty({ message: 'O email não pode estar vazio.' })
     user_email: string;
-
-    @IsOptional()
-    // @Matches(/^(?!([0-9])\1+$)[1-9]{2}9?[0-9]{8}$/, { message: 'O número de telefone deve ser válido e não deve conter todos os dígitos iguais.' })
-    user_phone?: string;
 
     @ApiProperty()
     @Length(5, 15, { message: 'A senha deve ter entre 5 e 15 caracteres.' })
@@ -31,8 +26,7 @@ export class CreateUserDto {
     @IsOptional()
     user_crp?: string;
 
-    @IsOptional()
-    address?: CreateAddressDto;
+
 
 
 }

@@ -8,7 +8,6 @@ import { RecoverInterface } from 'src/common/interfaces/recover.interface';
 import { getUserPath } from 'src/common/routes.path';
 import { FilterUser } from './dto/Filter.user';
 import { CreateUserDto } from './dto/create-user.dto';
-import { Qrcode2fa } from './dto/qrcode.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user.response.dto';
 import { UserEntity } from './entities/user.entity';
@@ -153,39 +152,6 @@ export class UserController {
     return this.userService.deleteUser(id)
   }
 
-  @Get('/qrcode-2fa/:id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
-  @ApiOperation({
-    description: `# Esta rota obtém os dados para gerar o qr-code.
-    Descrição: Este qr-code é usado para configurar o aplicativo que gera token.
-    Tipo: Autenticada. 
-    Acesso: [Todos]` })
-  @ApiParam({ name: 'id', description: '### Id do usuário. ' })
-  async getQrCode(
-    @Param('id') id: string
-  ) {
-    return this.userService.generate2FAQRCode(id)
-  }
-
-
-  @Put('status-code/:id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
-  @ApiOperation({
-    description: `# Esta rota habilita e desabilita a autenticação de dois fatores.
-    Tipo: Autenticada. 
-    Acesso: [Todos]` })
-  @ApiParam({ name: 'id', description: '### Id do usuário. ' })
-  @ApiBody({
-    description: '### No corpo de requisição, passe a variável status que define se habilita ou desabilita a autenticação de dois fatores.',
-    type: Qrcode2fa
-  })
-  async generate2fa(
-    @Param('id') id: string,
-    @Body() qrcode2fs: Qrcode2fa
-
-  ) {
-    return this.userService.generate2fa(id, qrcode2fs)
-  }
 
 
   @Get(':id')
