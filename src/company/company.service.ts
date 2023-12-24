@@ -72,6 +72,27 @@ export class CompanyService {
 
     const { company_cnpj, company_name, orderBy, sort, page, limit } = filter
 
+    let current_orderBy = 'DATE'
+    let current_page = 1
+    let current_sort = 'DESC'
+    let current_limit = 10
+
+    if (orderBy) {
+      current_orderBy = orderBy
+    }
+
+    if (page) {
+      current_page = page
+    }
+
+    if (sort) {
+      current_sort = sort
+    }
+
+    if (limit) {
+      current_limit = limit
+    }
+
     const queryBuilder = this.companyRepository.createQueryBuilder('company')
       .leftJoinAndSelect('company.users', 'user')
       .select([
@@ -94,14 +115,14 @@ export class CompanyService {
 
     if (company_cnpj) {
       queryBuilder.andWhere(`company.company_cnpj = :cnpj`, {
-        cnpj: company_cnpj
+        cnpj: company_cnpj.replace(/[^\d]+/g, '')
       });
     }
 
-    if (orderBy == SortingType.DATE) {
-      queryBuilder.orderBy('company.create_at', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
+    if (current_orderBy == SortingType.DATE) {
+      queryBuilder.orderBy('company.create_at', `${current_sort === 'DESC' ? 'DESC' : 'ASC'}`);
     } else {
-      queryBuilder.orderBy('company.company_name', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
+      queryBuilder.orderBy('company.company_name', `${current_sort === 'DESC' ? 'DESC' : 'ASC'}`);
     }
 
     const res = await queryBuilder.getMany()
@@ -109,7 +130,7 @@ export class CompanyService {
 
 
 
-    return customPagination(res, page, limit, filter)
+    return customPagination(res, current_page, current_limit, filter)
   }
 
   async findById(id: string) {
