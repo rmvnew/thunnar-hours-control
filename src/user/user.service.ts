@@ -1,14 +1,11 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
-import { cpf } from 'cpf-cnpj-validator';
 // import { faker } from '@faker-js/faker';
-import { faker } from '@faker-js/faker/locale/pt_BR';
 import { Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { SortingType, ValidType } from 'src/common/Enums';
 import { Utils } from 'src/common/Utils';
 import { CodeRecoverInterface } from 'src/common/interfaces/email.interface';
-import { UserFake } from 'src/common/interfaces/fake.interface';
 import { RecoverInterface } from 'src/common/interfaces/recover.interface';
 import { Validations } from 'src/common/validations';
 import { CompanyService } from 'src/company/company.service';
@@ -19,7 +16,6 @@ import { FilterUser } from './dto/Filter.user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user.response.dto';
-import { UserResponseLoginDto } from './dto/user.response.login.dto';
 import { UserEntity } from './entities/user.entity';
 
 @Injectable()
@@ -200,18 +196,21 @@ export class UserService {
 
       const user = await this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
+        .leftJoinAndSelect('user.company', 'company')
         .where('user.user_email = :user_email', { user_email: email })
+        .select([
+          'user.user_id',
+          'user.user_name',
+          'user.user_email',
+          'user.user_status',
+          'profile.profile_name',
+          'company.company_name',
+          'company.company_cnpj',
+        ])
         .getOne()
 
 
-
-      const userDto: UserResponseLoginDto = plainToClass(UserResponseLoginDto, user, {
-        excludeExtraneousValues: true
-      });
-
-      userDto.profile = user.profile
-
-      return userDto
+      return user
 
     } catch (error) {
       this.logger.error(`findByEmail error: ${error.message}`, error.stack)
@@ -235,6 +234,7 @@ export class UserService {
           'user.user_status',
           'profile.profile_name',
           'company.company_name',
+          'company.company_cnpj',
           'user.create_at',
           'user.update_at',
         ])
@@ -264,6 +264,7 @@ export class UserService {
           'user.user_status',
           'profile.profile_name',
           'company.company_name',
+          'company.company_cnpj',
           'user.create_at',
           'user.update_at',
         ])
@@ -608,42 +609,6 @@ export class UserService {
 
 
 
-  async generatedUserFake(quantity: number) {
-
-    let persons = []
-
-    for (let index = 0; index <= quantity; index++) {
-
-      const genero = Math.random() > 0.5 ? 'male' : 'female';
-      const emailLocalPart = faker.internet.userName().toLowerCase();
-
-      const person: UserFake = {
-        user_name: faker.person.fullName({ sex: `${genero}` })
-          .replace(/(Sra\.|Dr\.)\s?/g, "")
-          .replace(/[^a-zA-ZáéíóúÁÉÍÓÚãõÃÕâêîôûÂÊÎÔÛçÇ -]/g, ""),
-        user_email: `${emailLocalPart}@gmail.com`,
-        user_phone: faker.phone.number(),
-        user_password: faker.internet.password(),
-        user_profile_id: 2,
-        user_date_of_birth: faker.date.between({ from: new Date('1923-01-01'), to: new Date('2019-12-31') }).toISOString().split('T')[0],
-        user_genre: genero === 'male' ? 'MALE' : 'FEMALE',
-        user_cpf: cpf.generate(),
-        user_rg: faker.number.int({ min: 4444, max: 99999 }).toString()
-      }
-
-
-
-
-
-
-
-
-
-    }
-
-
-    return persons
-  }
 
 
 

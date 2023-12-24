@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import AccessProfile from 'src/auth/enums/permission.type';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
@@ -58,15 +58,7 @@ export class UserController {
   }
 
 
-  @Get('/fake')
-  @ApiExcludeEndpoint()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
-  async getFake(
-    @Query('quantity') quantity: number
-  ): Promise<any> {
 
-    return this.userService.generatedUserFake(quantity)
-  }
 
 
 

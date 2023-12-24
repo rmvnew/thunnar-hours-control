@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, Length, Validate } from 'class-validator';
-import { IsValidAgeConstraint } from './isValidAgeConstraint';
+import { IsNotEmpty, IsOptional, Length } from 'class-validator';
 
 export class CreateUserDto {
 
@@ -20,7 +19,6 @@ export class CreateUserDto {
     user_profile_id: number;
 
     @ApiProperty()
-    @Validate(IsValidAgeConstraint, { message: 'A idade deve estar entre 4 e 100 anos.' }) // Use o novo validador aqui
     user_date_of_birth: string;
 
     @IsOptional()
