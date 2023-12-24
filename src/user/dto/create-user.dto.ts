@@ -26,6 +26,8 @@ export class CreateUserDto {
     @IsOptional()
     user_crp?: string;
 
+    @ApiProperty()
+    company_id: string
 
 
 

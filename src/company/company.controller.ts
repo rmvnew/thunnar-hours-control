@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
 @Controller('company')
 export class CompanyController {
-  constructor(private readonly companyService: CompanyService) {}
+  constructor(private readonly companyService: CompanyService) { }
 
   @Post()
   create(@Body() createCompanyDto: CreateCompanyDto) {
@@ -19,7 +19,7 @@ export class CompanyController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.companyService.findOne(+id);
+    return this.companyService.findById(id);
   }
 
   @Patch(':id')

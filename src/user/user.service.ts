@@ -11,6 +11,7 @@ import { CodeRecoverInterface } from 'src/common/interfaces/email.interface';
 import { UserFake } from 'src/common/interfaces/fake.interface';
 import { RecoverInterface } from 'src/common/interfaces/recover.interface';
 import { Validations } from 'src/common/validations';
+import { CompanyService } from 'src/company/company.service';
 import { MailService } from 'src/mail/mail.service';
 import { ProfileService } from 'src/profile/profile.service';
 import { Repository } from 'typeorm';
@@ -33,6 +34,7 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
     private readonly profileService: ProfileService,
     private readonly mailservice: MailService,
+    private readonly companyService: CompanyService
 
 
   ) { }
@@ -51,6 +53,7 @@ export class UserService {
         user_email,
         user_password,
         user_date_of_birth,
+        company_id
       } = createUserDto
 
       if (user_name.trim() == '' || user_name == undefined) {
@@ -101,9 +104,12 @@ export class UserService {
         throw new NotFoundException(`Perfil não encontrado`)
       }
 
+      const current_company = await this.companyService.findById(company_id)
+
       user.profile = profile
       user.user_status = true
       user.user_first_access = true
+      user.company = current_company
 
       const dateParts = user_date_of_birth.split("/");
       user.user_date_of_birth = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
@@ -174,32 +180,6 @@ export class UserService {
     }
   }
 
-
-  // transformSpecialtys(specialtys: Specialty[]): SpecialtyResponseDto[] {
-  //   return plainToClass(SpecialtyResponseDto, specialtys, {
-  //     excludeExtraneousValues: true
-  //   });
-  // }
-
-  // transformAddress(address: Address): AddressResponseDto {
-  //   return plainToClass(AddressResponseDto, address, {
-  //     excludeExtraneousValues: true
-  //   });
-  // }
-
-  // transformPsychologist(psychologist: UserEntity): PsychologistBasicResponseDto {
-  //   return plainToClass(PsychologistBasicResponseDto, psychologist, {
-  //     excludeExtraneousValues: true
-  //   });
-  // }
-
-  // transformPatientDetails(patientDetails: PatientDetails): PatientDetailsResponseDto {
-  //   return plainToClass(PatientDetailsResponseDto, patientDetails, {
-  //     excludeExtraneousValues: true
-  //   });
-  // }
-
-
   async findByEmail(email: string) {
     try {
       return this.userRepository.createQueryBuilder('user')
@@ -247,12 +227,14 @@ export class UserService {
 
       return this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
+        .leftJoinAndSelect('user.company', 'company')
         .select([
           'user.user_id',
           'user.user_name',
           'user.user_email',
           'user.user_status',
           'profile.profile_name',
+          'company.company_name',
           'user.create_at',
           'user.update_at',
         ])
@@ -274,12 +256,14 @@ export class UserService {
 
       return this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
+        .leftJoinAndSelect('user.company', 'company')
         .select([
           'user.user_id',
           'user.user_name',
           'user.user_email',
           'user.user_status',
           'profile.profile_name',
+          'company.company_name',
           'user.create_at',
           'user.update_at',
         ])

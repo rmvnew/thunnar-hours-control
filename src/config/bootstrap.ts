@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { CompanyService } from 'src/company/company.service';
+import { CreateCompanyDto } from 'src/company/dto/create-company.dto';
+import { Company } from 'src/company/entities/company.entity';
 import { CreateProfileDto } from 'src/profile/dto/create-profile.dto';
 import { ProfileService } from 'src/profile/profile.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
@@ -10,6 +13,7 @@ export class Bootstrap {
     constructor(
         private readonly userService: UserService,
         private readonly profileService: ProfileService,
+        private readonly companyService: CompanyService
 
 
     ) { }
@@ -19,6 +23,7 @@ export class Bootstrap {
 
         const userHaveData = await this.userService.haveAdmin('sysadmin')
 
+        const haveCompany = await this.companyService.haveCompany('THUNNAR')
 
 
         let currentProfile = null
@@ -49,23 +54,41 @@ export class Bootstrap {
             }
         }
 
+        let current_company: Company = null
+
+        if (!haveCompany) {
+
+            const company: CreateCompanyDto = {
+                company_cnpj: '00.000.000/000-00',
+                company_name: 'Thunnar',
+                company_responsible: 'rmv'
+            }
+
+            current_company = await this.companyService.create(company)
+
+
+
+        }
+
 
         if (!userHaveData) {
 
-            console.log('Profile: ', currentProfile);
+            setTimeout(() => {
 
-            const user: CreateUserDto = {
-                user_name: 'sysadmin',
-                user_email: 'sysadmin@email.com',
-                user_password: process.env.SYSADMIN_PASS,
-                user_profile_id: currentProfile.profile_id,
-                user_date_of_birth: '01/01/1970'
+                const user: CreateUserDto = {
+                    user_name: 'sysadmin',
+                    user_email: 'sysadmin@email.com',
+                    user_password: process.env.SYSADMIN_PASS,
+                    user_profile_id: currentProfile.profile_id,
+                    user_date_of_birth: '01/01/1970',
+                    company_id: current_company.company_id
+                }
 
-            }
 
 
+                this.userService.create(user)
+            }, 2000);
 
-            this.userService.create(user)
         }
 
 
