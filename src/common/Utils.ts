@@ -1,6 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import { createCipheriv } from "crypto";
+import { CpnjResponse } from "./interfaces/cnpj-response";
 
 
 
@@ -205,6 +206,64 @@ export class Utils {
             isValid,
         };
     }
+
+
+    validateCNPJ(cnpj: string): CpnjResponse {
+        // Remover caracteres não numéricos
+        const sanitizedCNPJ = cnpj.replace(/[^\d]+/g, '');
+
+        let isValid = true;
+
+        if (sanitizedCNPJ.length !== 14) {
+            isValid = false;
+        }
+
+        if (/^(\d)\1+$/.test(sanitizedCNPJ)) {
+            isValid = false;
+        }
+
+        let sum = 0;
+        let remainder;
+
+        // Primeira parte da validação do CNPJ
+        const multipliers1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        for (let i = 0; i < 12; i++) {
+            sum += parseInt(sanitizedCNPJ.charAt(i)) * multipliers1[i];
+        }
+        remainder = sum % 11;
+        if (remainder < 2) {
+            remainder = 0;
+        } else {
+            remainder = 11 - remainder;
+        }
+        if (remainder !== parseInt(sanitizedCNPJ.charAt(12))) {
+            isValid = false;
+        }
+
+        // Segunda parte da validação do CNPJ
+        sum = 0;
+        const multipliers2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        for (let i = 0; i < 13; i++) {
+            sum += parseInt(sanitizedCNPJ.charAt(i)) * multipliers2[i];
+        }
+        remainder = sum % 11;
+        if (remainder < 2) {
+            remainder = 0;
+        } else {
+            remainder = 11 - remainder;
+        }
+        if (remainder !== parseInt(sanitizedCNPJ.charAt(13))) {
+            isValid = false;
+        }
+
+        const result: CpnjResponse = {
+            cnpj: sanitizedCNPJ,
+            status: isValid,
+        };
+
+        return result
+    }
+
 
 
 

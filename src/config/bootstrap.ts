@@ -23,7 +23,7 @@ export class Bootstrap {
 
         const userHaveData = await this.userService.haveAdmin('sysadmin')
 
-        const haveCompany = await this.companyService.haveCompany('THUNNAR')
+        const haveCompany = await this.companyService.haveCompany(process.env.DEFAULT_COMPANY)
 
 
         let currentProfile = null
@@ -60,7 +60,7 @@ export class Bootstrap {
 
             const company: CreateCompanyDto = {
                 company_cnpj: '00.000.000/000-00',
-                company_name: 'Thunnar',
+                company_name: process.env.DEFAULT_COMPANY,
                 company_responsible: 'rmv'
             }
 
