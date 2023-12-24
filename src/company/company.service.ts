@@ -153,7 +153,19 @@ export class CompanyService {
     return this.companyRepository.save(current_company)
   }
 
-  async remove(id: number) {
-    return `This action removes a #${id} company`;
+
+  async changeStatus(id: string) {
+
+    const isRegistered = await this.findById(id)
+
+    if (!isRegistered) {
+      throw new NotFoundException(`Empresa não encontrada!`)
+    }
+
+    const { is_active: status } = isRegistered
+
+    isRegistered.is_active = status ? false : true
+
+    return this.companyRepository.save(isRegistered)
   }
 }
