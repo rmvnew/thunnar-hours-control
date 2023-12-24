@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { getCompanies } from 'src/common/routes.path';
 import { CompanyService } from './company.service';
+import { CompanyFilter } from './dto/company.filter';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 
@@ -13,8 +15,11 @@ export class CompanyController {
   }
 
   @Get()
-  findAll() {
-    return this.companyService.findAll();
+  findAll(
+    @Query() filter: CompanyFilter
+  ) {
+    filter.route = getCompanies()
+    return this.companyService.findAll(filter);
   }
 
   @Get(':id')
