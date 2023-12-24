@@ -127,9 +127,6 @@ export class CompanyService {
 
     const res = await queryBuilder.getMany()
 
-
-
-
     return customPagination(res, current_page, current_limit, filter)
   }
 
@@ -177,16 +174,21 @@ export class CompanyService {
 
   async changeStatus(id: string) {
 
-    const isRegistered = await this.findById(id)
 
-    if (!isRegistered) {
+    const company_is_registered = await this.companyRepository.findOne({
+      where: {
+        company_id: id
+      }
+    })
+
+    if (!company_is_registered) {
       throw new NotFoundException(`Empresa não encontrada!`)
     }
 
-    const { is_active: status } = isRegistered
+    const { is_active: status } = company_is_registered
 
-    isRegistered.is_active = status ? false : true
+    company_is_registered.is_active = status ? false : true
 
-    return this.companyRepository.save(isRegistered)
+    return this.companyRepository.save(company_is_registered)
   }
 }
