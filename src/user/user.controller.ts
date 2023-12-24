@@ -28,7 +28,7 @@ export class UserController {
   @ApiOperation({
     description: `# Esta rota adiciona um novo usuário.
     Tipo: Autenticada. 
-    Acesso: [Administrador, Psicólogo, Atendente]` })
+    Acesso: [Administrador]` })
 
   @ApiBody({
     description: '## Schema padrão para criar usuário.',
