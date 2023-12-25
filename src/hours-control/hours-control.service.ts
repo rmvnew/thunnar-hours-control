@@ -69,8 +69,6 @@ export class HoursControlService {
 
     if (!have_todays_record) {
 
-      console.log(CustomDate.getInstance().newAmDate());
-
       const hours_control: CreateHoursControlDto = {
         hours_control_morning_entrance: CustomDate.getInstance().newAmDate(),
         user_id: id
@@ -79,7 +77,39 @@ export class HoursControlService {
 
 
     } else {
-      console.log('Agora já tem!!!!');
+
+      //^ Já tem hora agora temos que verificar o que já está registrado 
+      const {
+        hours_control_morning_departure,
+        hours_control_afternoon_entrance,
+        hours_control_afternoon_departure,
+        hours_control_extra_entrance,
+        hours_control_extra_exit
+      } = have_todays_record
+
+      if (!hours_control_morning_departure) {
+        //~ Se não tiver saida da manhã vamos registrar 
+        have_todays_record.hours_control_morning_departure = CustomDate.getInstance().newAmDate()
+      } else if (!hours_control_afternoon_entrance) {
+        //~ Se não tiver entrada da tarde vamos registrar 
+        have_todays_record.hours_control_afternoon_entrance = CustomDate.getInstance().newAmDate()
+      } else if (!hours_control_afternoon_departure) {
+        //~ Se não tiver saida da tarde vamos registrar 
+        have_todays_record.hours_control_afternoon_departure = CustomDate.getInstance().newAmDate()
+      } else if (!hours_control_extra_entrance) {
+        //~ Se não tiver entrada da extra vamos registrar 
+        have_todays_record.hours_control_extra_entrance = CustomDate.getInstance().newAmDate()
+      } else if (!hours_control_extra_exit) {
+        //~ Se não tiver saida da extra vamos registrar 
+        have_todays_record.hours_control_extra_exit = CustomDate.getInstance().newAmDate()
+      } else {
+        console.log(have_todays_record);
+        return null
+      }
+
+      await this.houerControlRepository.save(have_todays_record)
+
+
     }
 
 
