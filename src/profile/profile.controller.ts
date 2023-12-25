@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import AccessProfile from 'src/auth/enums/permission.type';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
 import { PublicRoute } from 'src/common/decorators/public_route.decorator';
@@ -10,6 +10,7 @@ import { ProfileService } from './profile.service';
 @Controller('profile')
 @ApiTags('Profile')
 @ApiBearerAuth()
+@ApiExcludeController()
 
 
 export class ProfileController {

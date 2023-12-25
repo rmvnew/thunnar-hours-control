@@ -29,7 +29,7 @@ export default () => ({
 
         },
         logging: false,
-        timezone: "Z"
+        timezone: "-04:00"
     },
 
     minio: {

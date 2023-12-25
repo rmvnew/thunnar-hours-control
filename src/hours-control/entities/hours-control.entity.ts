@@ -8,30 +8,30 @@ export class HoursControl {
     hours_control_id: string;
 
     @Column({ type: 'timestamp', nullable: true })
-    hours_control_morning_entrance: Date | null;
+    hours_control_morning_entrance: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    hours_control_morning_departure: Date | null;
+    hours_control_morning_departure: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    hours_control_afternoon_entrance: Date | null;
+    hours_control_afternoon_entrance: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    hours_control_afternoon_departure: Date | null;
+    hours_control_afternoon_departure: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    hours_control_extra_entrance: Date | null;
+    hours_control_extra_entrance: string | null;
 
     @Column({ type: 'timestamp', nullable: true })
-    hours_control_extra_exit: Date | null;
+    hours_control_extra_exit: string | null;
 
-    @Column({ type: 'time' })
+    @Column({ type: 'time', nullable: true })
     delay: string;
 
-    @Column({ type: 'time' })
+    @Column({ type: 'time', nullable: true })
     lack: string;
 
-    @Column({ type: 'time' })
+    @Column({ type: 'time', nullable: true })
     to_compensate: string;
 
     @CreateDateColumn()

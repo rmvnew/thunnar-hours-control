@@ -26,6 +26,7 @@ export class UserController {
   @Post()
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
+    summary: 'Criar um usuário.',
     description: `# Esta rota adiciona um novo usuário.
     Tipo: Autenticada. 
     Acesso: [Administrador]` })
@@ -44,10 +45,47 @@ export class UserController {
 
   @Get()
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+
   @ApiOperation({
+    summary: 'Buscar todos usuários.',
     description: `# Esta rota busca todos usuários.
     Tipo: Autenticada. 
     Acesso: [Administrador, Psicólogo, Atendente]` })
+
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: `### Número da Página. 
+    Define o número da página de resultados a ser retornada. 
+    Utilize este parâmetro para navegar através das páginas de resultados. 
+    O número da página deve ser um inteiro positivo.`,
+  })
+
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: `### Limite de Itens por Página. 
+    Especifica o número máximo de itens a serem exibidos em uma única página. 
+    Utilize este parâmetro para limitar a quantidade de dados retornados, 
+    facilitando a visualização e a navegação.`,
+  })
+
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    description: `### Direção da Ordenação. 
+    Determina a direção da ordenação dos resultados. 
+    Aceita os valores 'ASC' para ordenação crescente e 'DESC' para decrescente. 
+    Este parâmetro é geralmente combinado com o 'orderBy' para definir 
+    a ordem dos resultados de forma eficaz.`,
+  })
+
+  @ApiQuery({
+    name: 'orderBy',
+    required: false,
+    description: `### Campo de Ordenação. 
+    Especifica o atributo pelo qual os resultados devem ser ordenados.`,
+  })
   @ApiQuery({ name: 'user_name', required: false, description: '### Este é um filtro opcional!' })
   async findAll(
     @Query() filter: FilterUser
@@ -66,6 +104,7 @@ export class UserController {
   @Post('/resetPass')
   @PublicRoute()
   @ApiOperation({
+    summary: 'Definir nova senha para o usuário.',
     description: `# Esta rota redefine a senha do usuário.
     Tipo: Publica. 
     Acesso: [Livre]` })
@@ -91,6 +130,7 @@ export class UserController {
   @Post('/recover-code')
   @PublicRoute()
   @ApiOperation({
+    summary: 'Enviar código para redefinir a senha.',
     description: `# Esta rota dispara o email que contém o código para redefinição de senha.
     Tipo: Publica. 
     Acesso: [Livre]` })
@@ -107,6 +147,7 @@ export class UserController {
   @Get('/userEmail')
   @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
   @ApiOperation({
+    summary: 'Buscar usuário por email.',
     description: `# Esta rota busca um usuário pelo email.
     Tipo: Autenticada. 
     Acesso: [Todos]` })
@@ -134,6 +175,7 @@ export class UserController {
   @Delete(':id')
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
+    summary: 'Deletar usuário.',
     description: `# Esta rota deleta um usuário.
     Tipo: Autenticada. 
     Acesso: [Administrador]` })
@@ -149,11 +191,12 @@ export class UserController {
   @Get(':id')
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
+    summary: 'Buscar usuário por Id.',
     description: `# Esta rota busca um usuário pelo Id.
     Tipo: Autenticada. 
     Acesso: [Administrador, Psicólogo, Atendente]` })
   @ApiParam({ name: 'id', description: 'Id do usuário. ' })
-  async findOne(
+  async findById(
     @Param('id') id: string
   ): Promise<UserResponseDto> {
     return this.userService.findById(id);
@@ -162,6 +205,7 @@ export class UserController {
   @Put(':id')
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
+    summary: 'Atualizar um usuário.',
     description: `# Esta rota atualiza um usuário pelo Id.
     Tipo: Autenticada. 
     Acesso: [Administrador, Psicólogo, Atendente]` })
@@ -180,6 +224,7 @@ export class UserController {
   @Patch('/status/:id')
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
+    summary: 'Mudar status de um usuário.',
     description: `# Esta rota habilita e desabilita um usuário pelo Id.
     Tipo: Autenticada. 
     Acesso: [Administrador, Psicólogo]` })
