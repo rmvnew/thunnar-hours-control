@@ -29,4 +29,6 @@ export class Company {
     @OneToMany(() => UserEntity, user => user.company)
     users: UserEntity[];
 
+
+
 }

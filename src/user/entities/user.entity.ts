@@ -1,6 +1,7 @@
+import { EmployeeConfig } from 'src/employee-config/entities/employee-config.entity';
 import { HoursControl } from 'src/hours-control/entities/hours-control.entity';
 import { ProfileEntity } from "src/profile/entities/profile.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Company } from './../../company/entities/company.entity';
 
 @Entity('USER')
@@ -39,7 +40,7 @@ export class UserEntity {
     @Column()
     user_first_access: boolean
 
-    @ManyToOne(() => ProfileEntity, (profile) => profile.users)
+    @OneToOne(() => ProfileEntity, (profile) => profile.users)
     @JoinColumn({ name: 'user_profile_id' })
     profile: ProfileEntity
 
@@ -60,6 +61,9 @@ export class UserEntity {
         name: 'company_id'
     })
     company: Company
+
+    @OneToOne(() => EmployeeConfig, employee => employee.user)
+    employee_config: EmployeeConfig;
 
 
 }

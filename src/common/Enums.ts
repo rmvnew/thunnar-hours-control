@@ -28,6 +28,7 @@ export enum ValidType {
     IS_EMAIL = 'IS_EMAIL',
     DATE = 'DATE',
     DATE_BR = 'DATE_BR',
+    SIMPLE_HOUR = 'SIMPLE_HOUR',
 
 }
 

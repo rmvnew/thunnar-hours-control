@@ -50,7 +50,7 @@ export class UserController {
     summary: 'Buscar todos usuários.',
     description: `# Esta rota busca todos usuários.
     Tipo: Autenticada. 
-    Acesso: [Administrador, Psicólogo, Atendente]` })
+    Acesso: [Administrador]` })
 
   @ApiQuery({
     name: 'page',
@@ -194,7 +194,7 @@ export class UserController {
     summary: 'Buscar usuário por Id.',
     description: `# Esta rota busca um usuário pelo Id.
     Tipo: Autenticada. 
-    Acesso: [Administrador, Psicólogo, Atendente]` })
+    Acesso: [Administrador]` })
   @ApiParam({ name: 'id', description: 'Id do usuário. ' })
   async findById(
     @Param('id') id: string
@@ -208,7 +208,7 @@ export class UserController {
     summary: 'Atualizar um usuário.',
     description: `# Esta rota atualiza um usuário pelo Id.
     Tipo: Autenticada. 
-    Acesso: [Administrador, Psicólogo, Atendente]` })
+    Acesso: [Administrador]` })
   @ApiParam({ name: 'id', description: 'Id do usuário. ' })
   @ApiBody({
     description: '## Schema padrão para atualizar um usuário. ',
@@ -227,7 +227,7 @@ export class UserController {
     summary: 'Mudar status de um usuário.',
     description: `# Esta rota habilita e desabilita um usuário pelo Id.
     Tipo: Autenticada. 
-    Acesso: [Administrador, Psicólogo]` })
+    Acesso: [Administrador]` })
   @ApiParam({ name: 'id', description: '### Id do usuário. ' })
   async changeStatus(
     @Param('id') id: string

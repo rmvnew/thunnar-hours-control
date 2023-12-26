@@ -12,6 +12,8 @@ import { EmailModule } from './mail/mail.module';
 import { ProfileModule } from './profile/profile.module';
 import { UserModule } from './user/user.module';
 
+import { EmployeeConfigModule } from './employee-config/employee-config.module';
+
 @Module({
   imports: [
     AuthModule,
@@ -23,6 +25,7 @@ import { UserModule } from './user/user.module';
     EmailModule,
     HoursControlModule,
     CompanyModule,
+    EmployeeConfigModule,
 
   ],
   controllers: [],

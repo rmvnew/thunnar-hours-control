@@ -63,6 +63,12 @@ export class Validations {
                 }
             }
 
+            if (data === ValidType.SIMPLE_HOUR) {
+                if (!this.validRegex(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/g, str)) {
+                    throw new BadRequestException(`Hora ${str} está em um formato inválido!`)
+                }
+            }
+
         })
     }
 
