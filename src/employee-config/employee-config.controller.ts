@@ -78,7 +78,7 @@ export class EmployeeConfigController {
     @Query('company_id', ParseUUIDPipe) company_id: string,
     @Query() filter: EmployeeFilter
   ) {
-    return this.employeeConfigService.findAll(company_id, filter);
+    return this.employeeConfigService.findAllAdmin(company_id, filter);
   }
 
   @Get(':id')

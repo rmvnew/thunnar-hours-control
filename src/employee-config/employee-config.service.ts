@@ -85,7 +85,7 @@ export class EmployeeConfigService {
 
   }
 
-  async findAll(company_id: string, filter: EmployeeFilter) {
+  async findAllAdmin(company_id: string, filter: EmployeeFilter) {
 
     const { user_name, orderBy, sort, page, limit } = filter
 

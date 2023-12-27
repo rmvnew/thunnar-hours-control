@@ -1,12 +1,13 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
 // import { faker } from '@faker-js/faker';
-import { Pagination, paginate } from 'nestjs-typeorm-paginate';
+import { Pagination } from 'nestjs-typeorm-paginate';
 import { SortingType, ValidType } from 'src/common/Enums';
 import { Utils } from 'src/common/Utils';
 import { CodeRecoverInterface } from 'src/common/interfaces/email.interface';
 import { RecoverInterface } from 'src/common/interfaces/recover.interface';
+import { customPagination } from 'src/common/pagination/custom.pagination';
 import { Validations } from 'src/common/validations';
 import { CompanyService } from 'src/company/company.service';
 import { MailService } from 'src/mail/mail.service';
@@ -51,6 +52,11 @@ export class UserService {
         user_date_of_birth,
         company_id
       } = createUserDto
+
+
+      if (!company_id) {
+        throw new BadGatewayException(`Id da empresa não foi informado!`)
+      }
 
       if (user_name.trim() == '' || user_name == undefined) {
         throw new BadRequestException(`O nome não pode estar vazio`)
@@ -102,6 +108,11 @@ export class UserService {
 
       const current_company = await this.companyService.findById(company_id)
 
+
+      if (!current_company) {
+        throw new NotFoundException(`Empresa não encontrada!`)
+      }
+
       user.profile = profile
       user.user_status = true
       user.user_first_access = true
@@ -110,8 +121,7 @@ export class UserService {
       const dateParts = user_date_of_birth.split("/");
       user.user_date_of_birth = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
 
-      const userSaved = this.userRepository.save(user)
-
+      const userSaved = await this.userRepository.save(user)
 
       const userDto: UserResponseDto = plainToClass(UserResponseDto, userSaved, {
         excludeExtraneousValues: true
@@ -120,7 +130,7 @@ export class UserService {
       return userDto
 
     } catch (error) {
-      this.logger.warn(`createUser error: ${error.message}`, error.stack);
+      this.logger.error(`createUser error: ${error.message}`, error.stack);
       throw error
     }
 
@@ -136,10 +146,24 @@ export class UserService {
   async findAll(filter: FilterUser): Promise<Pagination<UserEntity>> {
 
     try {
-      const { sort, orderBy, user_name, showActives } = filter;
+      const { sort, orderBy, user_name, showActives, page, limit } = filter;
 
 
-      const userQueryBuilder = this.userRepository.createQueryBuilder('user');
+      const userQueryBuilder = this.userRepository.createQueryBuilder('user')
+        .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.profile', 'profile')
+        .leftJoinAndSelect('user.employee_config', 'config')
+        .select([
+          'user.user_id',
+          'user.user_name',
+          'user.user_email',
+          'user.user_status',
+          'company.company_id',
+          'company.company_name',
+          'profile.profile_name',
+        ]).addSelect('config')
+
+
       if (showActives === "true") {
         userQueryBuilder.andWhere('user.user_status = true');
       } else if (showActives === "false") {
@@ -157,18 +181,19 @@ export class UserService {
       } else {
         userQueryBuilder.orderBy('user.user_name', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
       }
-      const page = await paginate<UserEntity>(userQueryBuilder, filter);
+      // const page = await paginate<UserEntity>(userQueryBuilder, filter);
+
+
+      const res = await userQueryBuilder.getMany()
 
 
 
+      // page.links.first = page.links.first === '' ? '' : `${page.links.first}&sort=${sort}&orderBy=${orderBy}`;
+      // page.links.previous = page.links.previous === '' ? '' : `${page.links.previous}&sort=${sort}&orderBy=${orderBy}`;
+      // page.links.last = page.links.last === '' ? '' : `${page.links.last}&sort=${sort}&orderBy=${orderBy}`;
+      // page.links.next = page.links.next === '' ? '' : `${page.links.next}&sort=${sort}&orderBy=${orderBy}`;
 
-
-      page.links.first = page.links.first === '' ? '' : `${page.links.first}&sort=${sort}&orderBy=${orderBy}`;
-      page.links.previous = page.links.previous === '' ? '' : `${page.links.previous}&sort=${sort}&orderBy=${orderBy}`;
-      page.links.last = page.links.last === '' ? '' : `${page.links.last}&sort=${sort}&orderBy=${orderBy}`;
-      page.links.next = page.links.next === '' ? '' : `${page.links.next}&sort=${sort}&orderBy=${orderBy}`;
-
-      return page;
+      return customPagination(res, page, limit, filter);
 
     } catch (error) {
       this.logger.error(`findAll error: ${error.message}`, error.stack)
