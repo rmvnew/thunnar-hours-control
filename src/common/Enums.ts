@@ -39,7 +39,9 @@ export enum ObjectSize {
 
 export enum ProfileValue {
     ADMIN_VALUE = 1,
-    USER_VALUE = 2
+    USER_VALUE = 2,
+    MANAGER_VALUE = 3,
+    OWNER_VALUE = 4
 
 
 }

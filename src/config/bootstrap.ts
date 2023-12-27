@@ -28,7 +28,7 @@ export class Bootstrap {
 
         let currentProfile = null
 
-        const profiles = ['ADMIN', 'USER']
+        const profiles = ['ADMIN', 'USER', 'MANAGER', 'OWNER']
 
         for (let prof of profiles) {
 
