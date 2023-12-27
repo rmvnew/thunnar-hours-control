@@ -143,7 +143,7 @@ export class UserService {
 
 
 
-  async findAll(filter: FilterUser): Promise<Pagination<UserEntity>> {
+  async findAllAdmin(filter: FilterUser): Promise<Pagination<UserEntity>> {
 
     try {
       const { sort, orderBy, user_name, showActives, page, limit } = filter;
@@ -162,6 +162,67 @@ export class UserService {
           'company.company_name',
           'profile.profile_name',
         ]).addSelect('config')
+
+
+      if (showActives === "true") {
+        userQueryBuilder.andWhere('user.user_status = true');
+      } else if (showActives === "false") {
+        userQueryBuilder.andWhere('user.user_status = false');
+      }
+
+
+      if (user_name) {
+        userQueryBuilder.andWhere(`user.user_name LIKE :user_name`, {
+          user_name: `%${user_name}%`
+        });
+      }
+      if (orderBy == SortingType.DATE) {
+        userQueryBuilder.orderBy('user.create_at', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
+      } else {
+        userQueryBuilder.orderBy('user.user_name', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
+      }
+      // const page = await paginate<UserEntity>(userQueryBuilder, filter);
+
+
+      const res = await userQueryBuilder.getMany()
+
+
+
+      // page.links.first = page.links.first === '' ? '' : `${page.links.first}&sort=${sort}&orderBy=${orderBy}`;
+      // page.links.previous = page.links.previous === '' ? '' : `${page.links.previous}&sort=${sort}&orderBy=${orderBy}`;
+      // page.links.last = page.links.last === '' ? '' : `${page.links.last}&sort=${sort}&orderBy=${orderBy}`;
+      // page.links.next = page.links.next === '' ? '' : `${page.links.next}&sort=${sort}&orderBy=${orderBy}`;
+
+      return customPagination(res, page, limit, filter);
+
+    } catch (error) {
+      this.logger.error(`findAll error: ${error.message}`, error.stack)
+      throw error;
+    }
+  }
+
+  async findAll(company_id: string, filter: FilterUser): Promise<Pagination<UserEntity>> {
+
+
+
+    try {
+      const { sort, orderBy, user_name, showActives, page, limit } = filter;
+
+
+      const userQueryBuilder = this.userRepository.createQueryBuilder('user')
+        .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.profile', 'profile')
+        .leftJoinAndSelect('user.employee_config', 'config')
+        .select([
+          'user.user_id',
+          'user.user_name',
+          'user.user_email',
+          'user.user_status',
+          'company.company_id',
+          'company.company_name',
+          'profile.profile_name',
+        ]).addSelect('config')
+        .where('company.company_id = :id', { id: company_id })
 
 
       if (showActives === "true") {

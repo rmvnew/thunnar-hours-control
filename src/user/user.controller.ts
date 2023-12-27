@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import AccessProfile from 'src/auth/enums/permission.type';
+import { CompanyGuard } from 'src/auth/shared/guards/employeeCompany.guard';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
 import { PublicRoute } from 'src/common/decorators/public_route.decorator';
 import { RecoverInterface } from 'src/common/interfaces/recover.interface';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { getUserPath } from 'src/common/routes.path';
 import { FilterUser } from './dto/Filter.user';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -87,12 +89,71 @@ export class UserController {
     Especifica o atributo pelo qual os resultados devem ser ordenados.`,
   })
   @ApiQuery({ name: 'user_name', required: false, description: '### Este é um filtro opcional!' })
-  async findAll(
+  async findAllAdmin(
+
     @Query() filter: FilterUser
   ): Promise<Pagination<UserEntity>> {
 
     filter.route = getUserPath();
-    return this.userService.findAll(filter);
+    return this.userService.findAllAdmin(filter);
+  }
+
+
+
+
+  @Get('/all')
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
+
+  @ApiOperation({
+    summary: 'Buscar todos usuários.',
+    description: `# Esta rota busca todos usuários.
+    Tipo: Autenticada. 
+    Acesso: [Administrador]` })
+
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: `### Número da Página. 
+    Define o número da página de resultados a ser retornada. 
+    Utilize este parâmetro para navegar através das páginas de resultados. 
+    O número da página deve ser um inteiro positivo.`,
+  })
+
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: `### Limite de Itens por Página. 
+    Especifica o número máximo de itens a serem exibidos em uma única página. 
+    Utilize este parâmetro para limitar a quantidade de dados retornados, 
+    facilitando a visualização e a navegação.`,
+  })
+
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    description: `### Direção da Ordenação. 
+    Determina a direção da ordenação dos resultados. 
+    Aceita os valores 'ASC' para ordenação crescente e 'DESC' para decrescente. 
+    Este parâmetro é geralmente combinado com o 'orderBy' para definir 
+    a ordem dos resultados de forma eficaz.`,
+  })
+
+  @ApiQuery({
+    name: 'orderBy',
+    required: false,
+    description: `### Campo de Ordenação. 
+    Especifica o atributo pelo qual os resultados devem ser ordenados.`,
+  })
+  @ApiQuery({ name: 'user_name', required: false, description: '### Este é um filtro opcional!' })
+  async findAll(
+    @Req() req: RequestWithUser,
+    @Query() filter: FilterUser
+  ): Promise<Pagination<UserEntity>> {
+
+    const company_id = req.user.company_id
+
+    filter.route = getUserPath();
+    return this.userService.findAll(company_id, filter);
   }
 
 
