@@ -205,6 +205,7 @@ export class UserService {
     try {
       return this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
+        .leftJoinAndSelect('user.company', 'company')
         .where('user.user_email = :user_email', { user_email: email })
         .getOne()
 

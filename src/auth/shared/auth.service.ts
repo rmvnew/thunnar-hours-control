@@ -74,10 +74,11 @@ export class AuthService {
     }
 
     async generateAndReturnTokens(userSaved: UserEntity) {
-        const { access_token, refresh_token } = await this.getTokens(userSaved.user_id, userSaved.user_name, userSaved.user_profile_id);
+        const { access_token, refresh_token } = await this.getTokens(userSaved);
 
         const hashed_refresh_token = await hash(refresh_token);
         await this.userService.updateRefreshToken(userSaved.user_id, hashed_refresh_token);
+
 
         return {
             access_token: access_token,
@@ -85,6 +86,7 @@ export class AuthService {
             name: userSaved.user_name,
             login: userSaved.user_email,
             profile: userSaved.profile.profile_name,
+            company_id: userSaved.company.company_id,
             expires_in: this.configService.get('auth.token_expires_in')
         };
     }
@@ -113,7 +115,7 @@ export class AuthService {
             throw new HttpException('User with this enrollment does not exist', HttpStatus.NOT_FOUND);
         }
 
-        const { access_token, refresh_token } = await this.getTokens(user.user_id, user.user_name, user.user_profile_id)
+        const { access_token, refresh_token } = await this.getTokens(user)
 
         const hashed_refresh_token = await hash(refresh_token);
 
@@ -128,6 +130,7 @@ export class AuthService {
             access_token: access_token,
             refresh_token: refresh_token,
             name: user.user_name,
+            company_id: user.company.company_id,
             profile: user.user_profile_id,
             expires_in: expiration
         }
@@ -144,13 +147,14 @@ export class AuthService {
         // await this.userService.updateRefreshToken(user.user_id, null);
     }
 
-    async getTokens(id: string, name: string, profile_id: number): Promise<Tokens> {
+    async getTokens(user: UserEntity): Promise<Tokens> {
 
         const [access_token, refresh_token] = await Promise.all([
             this.jwtService.signAsync({
-                sub: id,
-                name: name,
-                profile: profile_id,
+                sub: user.user_id,
+                name: user.user_name,
+                profile: user.profile.profile_id,
+                company_id: user.company.company_id
             },
                 {
                     secret: process.env.JWT_SECRET,
@@ -159,7 +163,7 @@ export class AuthService {
 
                 }),
             this.jwtService.signAsync({
-                sub: id,
+                sub: user.user_id,
             },
                 {
                     secret: process.env.JWT_REFRESH_TOKEN_SECRET,
