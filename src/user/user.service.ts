@@ -256,6 +256,7 @@ export class UserService {
       let userQuery = await this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
         .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.employee_config', 'config')
 
       if (req.user.profile !== 1) {
         userQuery = userQuery.andWhere('company.company_id = :id', { id: current_company_id })
@@ -273,6 +274,7 @@ export class UserService {
           'user.create_at',
           'user.update_at',
         ])
+        .addSelect('config')
         .where('user.user_id = :user_id', { user_id: id })
         .getOne()
 
