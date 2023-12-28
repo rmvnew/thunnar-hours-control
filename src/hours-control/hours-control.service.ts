@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { endOfDay, startOfDay } from 'date-fns';
 import { CustomDate } from 'src/common/custom.date';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
 import { CreateHoursControlDto } from './dto/create-hours-control.dto';
@@ -17,7 +18,7 @@ export class HoursControlService {
     private readonly userService: UserService
   ) { }
 
-  async create(createHoursControlDto: CreateHoursControlDto) {
+  async create(req: RequestWithUser, createHoursControlDto: CreateHoursControlDto) {
 
 
     const { user_id, hours_control_morning_entrance } = createHoursControlDto
@@ -34,16 +35,16 @@ export class HoursControlService {
     current_hour_control.delay = null
     current_hour_control.to_compensate = null
 
-    const user = await this.userService.findById(user_id)
+    const user = await this.userService.findById(req, user_id)
     current_hour_control.user = user
 
 
     return this.houerControlRepository.save(current_hour_control)
   }
 
-  async pointRecord(id: string) {
+  async pointRecord(req: RequestWithUser, id: string) {
 
-    const user_is_registered = await this.userService.findById(id)
+    const user_is_registered = await this.userService.findById(req, id)
 
     if (!user_is_registered) {
       throw new BadRequestException(`Usuário não existe`)
@@ -73,7 +74,7 @@ export class HoursControlService {
         hours_control_morning_entrance: CustomDate.getInstance().newAmDate(),
         user_id: id
       }
-      const today = await this.create(hours_control)
+      const today = await this.create(req, hours_control)
 
 
     } else {

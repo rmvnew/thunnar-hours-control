@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { totp } from 'otplib';
 
 import { hash, isMatchHash } from 'src/common/hash';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { UserEntity } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
@@ -137,8 +138,8 @@ export class AuthService {
     }
 
 
-    async removeRefreshToken(id: string): Promise<any> {
-        const user = await this.userService.findById(id)
+    async removeRefreshToken(req: RequestWithUser, id: string): Promise<any> {
+        const user = await this.userService.findById(req, id)
 
         if (!user) {
             throw new HttpException('User with this enrollment does not exist', HttpStatus.NOT_FOUND);

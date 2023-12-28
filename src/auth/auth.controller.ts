@@ -2,11 +2,13 @@
 https://docs.nestjs.com/controllers#controllers
 */
 
-import { Body, Controller, HttpCode, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PublicRoute } from 'src/common/decorators/public_route.decorator';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { LoginDTO } from './dto/login.dto';
 import { AuthService } from './shared/auth.service';
+import { CompanyGuard } from './shared/guards/employeeCompany.guard';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { JwtRefreshAuthGuard } from './shared/guards/jwt.refresh-auth.guard';
 import { LocalAuthGuard } from './shared/guards/local-auth.guard';
@@ -37,9 +39,12 @@ export class AuthController {
     @Post('/logout')
     @ApiBearerAuth()
     @ApiExcludeEndpoint()
-    @UseGuards(JwtAuthGuard)
-    async logout(@Request() payload: any) {
-        return this.authService.removeRefreshToken(payload.user.sub);
+    @UseGuards(CompanyGuard, JwtAuthGuard)
+    async logout(
+        @Req() req: RequestWithUser,
+        @Request() payload: any
+    ) {
+        return this.authService.removeRefreshToken(req, payload.user.sub);
     }
 
     @Post('/refresh_token')

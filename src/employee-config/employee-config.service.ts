@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SortingType, ValidType } from 'src/common/Enums';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { customPagination } from 'src/common/pagination/custom.pagination';
 import { Validations } from 'src/common/validations';
 import { UserService } from 'src/user/user.service';
@@ -20,7 +21,7 @@ export class EmployeeConfigService {
 
   ) { }
 
-  async create(createEmployeeConfigDto: CreateEmployeeConfigDto) {
+  async create(req: RequestWithUser, createEmployeeConfigDto: CreateEmployeeConfigDto) {
 
     const {
       user_id,
@@ -69,7 +70,7 @@ export class EmployeeConfigService {
     }
 
     const config = this.employeeConfigRepository.create(createEmployeeConfigDto)
-    const user = await this.userService.findById(user_id)
+    const user = await this.userService.findById(req, user_id)
     config.user = user
     config.work_Monday = work_Monday ? true : false
     config.work_Tuesday = work_Tuesday ? true : false

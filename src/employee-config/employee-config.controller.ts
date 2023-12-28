@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import AccessProfile from 'src/auth/enums/permission.type';
+import { CompanyGuard } from 'src/auth/shared/guards/employeeCompany.guard';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { CreateEmployeeConfigDto } from './dto/create-employee-config.dto';
 import { EmployeeFilter } from './dto/employee.filter';
 import { UpdateEmployeeConfigDto } from './dto/update-employee-config.dto';
@@ -15,7 +17,7 @@ export class EmployeeConfigController {
   constructor(private readonly employeeConfigService: EmployeeConfigService) { }
 
   @Post()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     summary: 'Criar a configuração do funcionário.',
     description: `# Esta rota adiciona uma nova configuração para o usuário.
@@ -26,8 +28,11 @@ export class EmployeeConfigController {
     description: '## Schema padrão para criar configuração do usuário.',
     type: CreateEmployeeConfigDto
   })
-  async create(@Body() createEmployeeConfigDto: CreateEmployeeConfigDto) {
-    return this.employeeConfigService.create(createEmployeeConfigDto);
+  async create(
+    @Req() req: RequestWithUser,
+    @Body() createEmployeeConfigDto: CreateEmployeeConfigDto
+  ) {
+    return this.employeeConfigService.create(req, createEmployeeConfigDto);
   }
 
   @Get()

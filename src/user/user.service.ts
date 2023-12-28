@@ -7,6 +7,7 @@ import { SortingType, ValidType } from 'src/common/Enums';
 import { Utils } from 'src/common/Utils';
 import { CodeRecoverInterface } from 'src/common/interfaces/email.interface';
 import { RecoverInterface } from 'src/common/interfaces/recover.interface';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { customPagination } from 'src/common/pagination/custom.pagination';
 import { Validations } from 'src/common/validations';
 import { CompanyService } from 'src/company/company.service';
@@ -136,23 +137,26 @@ export class UserService {
 
   }
 
+  async findAll(req: RequestWithUser, filter: FilterUser): Promise<Pagination<UserEntity>> {
 
 
-
-
-
-
-
-  async findAllAdmin(filter: FilterUser): Promise<Pagination<UserEntity>> {
 
     try {
       const { sort, orderBy, user_name, showActives, page, limit } = filter;
 
 
-      const userQueryBuilder = this.userRepository.createQueryBuilder('user')
+      const current_company_id = req.user.company_id
+
+      let userQuery = this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.company', 'company')
         .leftJoinAndSelect('user.profile', 'profile')
         .leftJoinAndSelect('user.employee_config', 'config')
+
+      if (req.user.profile !== 1) {
+        userQuery = userQuery.andWhere('company.company_id = :id', { id: current_company_id })
+      }
+
+      const user = await userQuery
         .select([
           'user.user_id',
           'user.user_name',
@@ -165,94 +169,24 @@ export class UserService {
 
 
       if (showActives === "true") {
-        userQueryBuilder.andWhere('user.user_status = true');
+        user.andWhere('user.user_status = true');
       } else if (showActives === "false") {
-        userQueryBuilder.andWhere('user.user_status = false');
+        user.andWhere('user.user_status = false');
       }
 
 
       if (user_name) {
-        userQueryBuilder.andWhere(`user.user_name LIKE :user_name`, {
+        user.andWhere(`user.user_name LIKE :user_name`, {
           user_name: `%${user_name}%`
         });
       }
       if (orderBy == SortingType.DATE) {
-        userQueryBuilder.orderBy('user.create_at', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
+        user.orderBy('user.create_at', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
       } else {
-        userQueryBuilder.orderBy('user.user_name', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
-      }
-      // const page = await paginate<UserEntity>(userQueryBuilder, filter);
-
-
-      const res = await userQueryBuilder.getMany()
-
-
-
-      // page.links.first = page.links.first === '' ? '' : `${page.links.first}&sort=${sort}&orderBy=${orderBy}`;
-      // page.links.previous = page.links.previous === '' ? '' : `${page.links.previous}&sort=${sort}&orderBy=${orderBy}`;
-      // page.links.last = page.links.last === '' ? '' : `${page.links.last}&sort=${sort}&orderBy=${orderBy}`;
-      // page.links.next = page.links.next === '' ? '' : `${page.links.next}&sort=${sort}&orderBy=${orderBy}`;
-
-      return customPagination(res, page, limit, filter);
-
-    } catch (error) {
-      this.logger.error(`findAll error: ${error.message}`, error.stack)
-      throw error;
-    }
-  }
-
-  async findAll(company_id: string, filter: FilterUser): Promise<Pagination<UserEntity>> {
-
-
-
-    try {
-      const { sort, orderBy, user_name, showActives, page, limit } = filter;
-
-
-      const userQueryBuilder = this.userRepository.createQueryBuilder('user')
-        .leftJoinAndSelect('user.company', 'company')
-        .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.employee_config', 'config')
-        .select([
-          'user.user_id',
-          'user.user_name',
-          'user.user_email',
-          'user.user_status',
-          'company.company_id',
-          'company.company_name',
-          'profile.profile_name',
-        ]).addSelect('config')
-        .where('company.company_id = :id', { id: company_id })
-
-
-      if (showActives === "true") {
-        userQueryBuilder.andWhere('user.user_status = true');
-      } else if (showActives === "false") {
-        userQueryBuilder.andWhere('user.user_status = false');
+        user.orderBy('user.user_name', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
       }
 
-
-      if (user_name) {
-        userQueryBuilder.andWhere(`user.user_name LIKE :user_name`, {
-          user_name: `%${user_name}%`
-        });
-      }
-      if (orderBy == SortingType.DATE) {
-        userQueryBuilder.orderBy('user.create_at', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
-      } else {
-        userQueryBuilder.orderBy('user.user_name', `${sort === 'DESC' ? 'DESC' : 'ASC'}`);
-      }
-      // const page = await paginate<UserEntity>(userQueryBuilder, filter);
-
-
-      const res = await userQueryBuilder.getMany()
-
-
-
-      // page.links.first = page.links.first === '' ? '' : `${page.links.first}&sort=${sort}&orderBy=${orderBy}`;
-      // page.links.previous = page.links.previous === '' ? '' : `${page.links.previous}&sort=${sort}&orderBy=${orderBy}`;
-      // page.links.last = page.links.last === '' ? '' : `${page.links.last}&sort=${sort}&orderBy=${orderBy}`;
-      // page.links.next = page.links.next === '' ? '' : `${page.links.next}&sort=${sort}&orderBy=${orderBy}`;
+      const res = await user.getMany()
 
       return customPagination(res, page, limit, filter);
 
@@ -276,44 +210,58 @@ export class UserService {
     }
   }
 
-
-  async findUserByEmail(email: string) {
-
+  async findUserByEmail(req: RequestWithUser, email: string) {
     try {
+      const current_company_id = req.user.company_id
 
-      const user = await this.userRepository.createQueryBuilder('user')
+      let userQuery = this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
         .leftJoinAndSelect('user.company', 'company')
         .where('user.user_email = :user_email', { user_email: email })
+
+      if (req.user.profile !== 1) {
+        userQuery = userQuery.andWhere('company.company_id = :id', { id: current_company_id })
+      }
+
+      const user = await userQuery
         .select([
           'user.user_id',
           'user.user_name',
           'user.user_email',
           'user.user_status',
           'profile.profile_name',
+          'company.company_id',
           'company.company_name',
           'company.company_cnpj',
         ])
-        .getOne()
+        .getOne();
 
-
-      return user
+      return user;
 
     } catch (error) {
       this.logger.error(`findByEmail error: ${error.message}`, error.stack)
-      throw error
+      throw error;
     }
   }
 
 
 
-  async findById(id: string): Promise<any> {
+
+  async findById(req: RequestWithUser, id: string): Promise<any> {
 
     try {
 
-      return this.userRepository.createQueryBuilder('user')
+      const current_company_id = req.user.company_id
+
+      let userQuery = await this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
         .leftJoinAndSelect('user.company', 'company')
+
+      if (req.user.profile !== 1) {
+        userQuery = userQuery.andWhere('company.company_id = :id', { id: current_company_id })
+      }
+
+      const user = await userQuery
         .select([
           'user.user_id',
           'user.user_name',
@@ -328,6 +276,8 @@ export class UserService {
         .where('user.user_id = :user_id', { user_id: id })
         .getOne()
 
+
+      return user
 
     } catch (error) {
       this.logger.error(`findById error: ${error.message}`, error.stack)
@@ -365,14 +315,9 @@ export class UserService {
     }
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
-
-
-
+  async update(req: RequestWithUser, id: string, updateUserDto: UpdateUserDto): Promise<UserResponseDto> {
 
     try {
-
-
 
       const {
         user_name,
@@ -382,23 +327,16 @@ export class UserService {
 
       } = updateUserDto
 
-
-
-      const isRegistered = await this.findById(id)
-
+      const isRegistered = await this.findById(req, id)
 
       if (!isRegistered) {
         throw new NotFoundException(`User does not exist`)
       }
 
-
-
       const user = await this.userRepository.preload({
         user_id: id,
         ...updateUserDto
       })
-
-
 
 
       if (user_name) {
@@ -442,7 +380,7 @@ export class UserService {
 
       await this.userRepository.save(user)
 
-      return this.findById(id)
+      return this.findById(req, id)
 
     } catch (error) {
       this.logger.error(`updateUser error: ${error.message}`, error.stack)
@@ -451,14 +389,10 @@ export class UserService {
   }
 
 
-  async deleteUser(id: string) {
+  async deleteUser(req: RequestWithUser, id: string) {
 
-    const isRegistered = await this.userRepository.findOne({
-      where: {
-        user_id: id
-      }
-    })
 
+    const isRegistered = await this.findById(req, id)
 
     if (!isRegistered) {
       throw new NotFoundException(`User does not exist`)
@@ -469,11 +403,11 @@ export class UserService {
 
   }
 
-  async changeStatus(id: string) {
+  async changeStatus(req: RequestWithUser, id: string) {
 
     try {
 
-      const userSaved = await this.findById(id)
+      const userSaved = await this.findById(req, id)
 
       if (!userSaved) {
         throw new NotFoundException(`User does not exist`)

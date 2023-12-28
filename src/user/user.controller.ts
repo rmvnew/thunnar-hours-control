@@ -26,7 +26,7 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
   @ApiOperation({
     summary: 'Criar um usuário.',
     description: `# Esta rota adiciona um novo usuário.
@@ -45,64 +45,64 @@ export class UserController {
 
 
 
-  @Get()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  // @Get()
+  // @UseGuards(PermissionGuard(AccessProfile.ADMIN))
 
-  @ApiOperation({
-    summary: 'Buscar todos usuários.',
-    description: `# Esta rota busca todos usuários.
-    Tipo: Autenticada. 
-    Acesso: [Administrador]` })
+  // @ApiOperation({
+  //   summary: 'Buscar todos usuários.',
+  //   description: `# Esta rota busca todos usuários.
+  //   Tipo: Autenticada. 
+  //   Acesso: [Administrador]` })
 
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    description: `### Número da Página. 
-    Define o número da página de resultados a ser retornada. 
-    Utilize este parâmetro para navegar através das páginas de resultados. 
-    O número da página deve ser um inteiro positivo.`,
-  })
+  // @ApiQuery({
+  //   name: 'page',
+  //   required: false,
+  //   description: `### Número da Página. 
+  //   Define o número da página de resultados a ser retornada. 
+  //   Utilize este parâmetro para navegar através das páginas de resultados. 
+  //   O número da página deve ser um inteiro positivo.`,
+  // })
 
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    description: `### Limite de Itens por Página. 
-    Especifica o número máximo de itens a serem exibidos em uma única página. 
-    Utilize este parâmetro para limitar a quantidade de dados retornados, 
-    facilitando a visualização e a navegação.`,
-  })
+  // @ApiQuery({
+  //   name: 'limit',
+  //   required: false,
+  //   description: `### Limite de Itens por Página. 
+  //   Especifica o número máximo de itens a serem exibidos em uma única página. 
+  //   Utilize este parâmetro para limitar a quantidade de dados retornados, 
+  //   facilitando a visualização e a navegação.`,
+  // })
 
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    description: `### Direção da Ordenação. 
-    Determina a direção da ordenação dos resultados. 
-    Aceita os valores 'ASC' para ordenação crescente e 'DESC' para decrescente. 
-    Este parâmetro é geralmente combinado com o 'orderBy' para definir 
-    a ordem dos resultados de forma eficaz.`,
-  })
+  // @ApiQuery({
+  //   name: 'sort',
+  //   required: false,
+  //   description: `### Direção da Ordenação. 
+  //   Determina a direção da ordenação dos resultados. 
+  //   Aceita os valores 'ASC' para ordenação crescente e 'DESC' para decrescente. 
+  //   Este parâmetro é geralmente combinado com o 'orderBy' para definir 
+  //   a ordem dos resultados de forma eficaz.`,
+  // })
 
-  @ApiQuery({
-    name: 'orderBy',
-    required: false,
-    description: `### Campo de Ordenação. 
-    Especifica o atributo pelo qual os resultados devem ser ordenados.`,
-  })
-  @ApiQuery({ name: 'user_name', required: false, description: '### Este é um filtro opcional!' })
-  async findAllAdmin(
+  // @ApiQuery({
+  //   name: 'orderBy',
+  //   required: false,
+  //   description: `### Campo de Ordenação. 
+  //   Especifica o atributo pelo qual os resultados devem ser ordenados.`,
+  // })
+  // @ApiQuery({ name: 'user_name', required: false, description: '### Este é um filtro opcional!' })
+  // async findAllAdmin(
 
-    @Query() filter: FilterUser
-  ): Promise<Pagination<UserEntity>> {
+  //   @Query() filter: FilterUser
+  // ): Promise<Pagination<UserEntity>> {
 
-    filter.route = getUserPath();
-    return this.userService.findAllAdmin(filter);
-  }
+  //   filter.route = getUserPath();
+  //   return this.userService.findAllAdmin(filter);
+  // }
 
 
 
 
   @Get('/all')
-  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
 
   @ApiOperation({
     summary: 'Buscar todos usuários.',
@@ -150,16 +150,11 @@ export class UserController {
     @Query() filter: FilterUser
   ): Promise<Pagination<UserEntity>> {
 
-    const company_id = req.user.company_id
+
 
     filter.route = getUserPath();
-    return this.userService.findAll(company_id, filter);
+    return this.userService.findAll(req, filter);
   }
-
-
-
-
-
 
 
   @Post('/resetPass')
@@ -206,7 +201,7 @@ export class UserController {
 
 
   @Get('/userEmail')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
   @ApiOperation({
     summary: 'Buscar usuário por email.',
     description: `# Esta rota busca um usuário pelo email.
@@ -214,14 +209,12 @@ export class UserController {
     Acesso: [Todos]` })
   @ApiParam({ name: 'email', description: '### E-mail de cadastro do usuário. ' })
   async getUserByEmail(
+    @Req() req: RequestWithUser,
     @Query('email') email: string
   ) {
 
-    return this.userService.findUserByEmail(email)
+    return this.userService.findUserByEmail(req, email)
   }
-
-
-
 
 
 
@@ -232,25 +225,8 @@ export class UserController {
    */
 
 
-
-  @Delete(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
-  @ApiOperation({
-    summary: 'Deletar usuário.',
-    description: `# Esta rota deleta um usuário.
-    Tipo: Autenticada. 
-    Acesso: [Administrador]` })
-  @ApiParam({ name: 'id', description: '### Id do usuário. ' })
-  async delete(
-    @Param('id') id: string
-  ) {
-    return this.userService.deleteUser(id)
-  }
-
-
-
   @Get(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     summary: 'Buscar usuário por Id.',
     description: `# Esta rota busca um usuário pelo Id.
@@ -258,13 +234,16 @@ export class UserController {
     Acesso: [Administrador]` })
   @ApiParam({ name: 'id', description: 'Id do usuário. ' })
   async findById(
+    @Req() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<UserResponseDto> {
-    return this.userService.findById(id);
+    return this.userService.findById(req, id);
   }
 
+
+
   @Put(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     summary: 'Atualizar um usuário.',
     description: `# Esta rota atualiza um usuário pelo Id.
@@ -276,14 +255,33 @@ export class UserController {
     type: UpdateUserDto
   })
   async update(
+    @Req() req: RequestWithUser,
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto
   ): Promise<UserResponseDto> {
-    return this.userService.update(id, updateUserDto);
+    return this.userService.update(req, id, updateUserDto);
   }
 
+
+
+  @Delete(':id')
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
+  @ApiOperation({
+    summary: 'Deletar usuário.',
+    description: `# Esta rota deleta um usuário.
+    Tipo: Autenticada. 
+    Acesso: [Administrador]` })
+  @ApiParam({ name: 'id', description: '### Id do usuário. ' })
+  async delete(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string
+  ) {
+    return this.userService.deleteUser(req, id)
+  }
+
+
   @Patch('/status/:id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
     summary: 'Mudar status de um usuário.',
     description: `# Esta rota habilita e desabilita um usuário pelo Id.
@@ -291,9 +289,10 @@ export class UserController {
     Acesso: [Administrador]` })
   @ApiParam({ name: 'id', description: '### Id do usuário. ' })
   async changeStatus(
+    @Req() req: RequestWithUser,
     @Param('id') id: string
   ): Promise<UserEntity> {
-    return this.userService.changeStatus(id);
+    return this.userService.changeStatus(req, id);
   }
 
 

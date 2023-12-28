@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import AccessProfile from 'src/auth/enums/permission.type';
+import { CompanyGuard } from 'src/auth/shared/guards/employeeCompany.guard';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
+import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { CreateHoursControlDto } from './dto/create-hours-control.dto';
 import { UpdateHoursControlDto } from './dto/update-hours-control.dto';
 import { HoursControlService } from './hours-control.service';
@@ -14,8 +16,12 @@ export class HoursControlController {
   constructor(private readonly hoursControlService: HoursControlService) { }
 
   @Post()
-  create(@Body() createHoursControlDto: CreateHoursControlDto) {
-    return this.hoursControlService.create(createHoursControlDto);
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_USER))
+  create(
+    @Req() req: RequestWithUser,
+    @Body() createHoursControlDto: CreateHoursControlDto
+  ) {
+    return this.hoursControlService.create(req, createHoursControlDto);
   }
 
 
@@ -25,12 +31,13 @@ export class HoursControlController {
   }
 
   @Post('/point/:id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_USER))
   async pointRegister(
+    @Req() req: RequestWithUser,
     @Param('id') id: string
   ) {
 
-    return this.hoursControlService.pointRecord(id)
+    return this.hoursControlService.pointRecord(req, id)
 
   }
 
