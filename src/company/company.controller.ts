@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import AccessProfile from 'src/auth/enums/permission.type';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
@@ -84,6 +85,15 @@ export class CompanyController {
     filter.route = getCompanies()
     return this.companyService.findAll(filter);
   }
+
+
+
+  @Post('excel')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadExcelFile(@UploadedFile() file: Express.Multer.File) {
+    return this.companyService.processExcel(file);
+  }
+
 
   @Get(':id')
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))

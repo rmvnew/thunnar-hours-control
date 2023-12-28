@@ -4,6 +4,7 @@ import { SortingType } from 'src/common/Enums';
 import { Utils } from 'src/common/Utils';
 import { customPagination } from 'src/common/pagination/custom.pagination';
 import { Equal, Not, Repository } from 'typeorm';
+import * as XLSX from 'xlsx';
 import { CompanyFilter } from './dto/company.filter';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -191,4 +192,44 @@ export class CompanyService {
 
     return this.companyRepository.save(company_is_registered)
   }
+
+
+
+
+  async processExcel(file: Express.Multer.File): Promise<any> {
+
+
+    const workbook = XLSX.readFile(file.path);
+    const sheetNames = workbook.SheetNames;
+    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetNames[0]]);
+
+    for (let item of data) {
+
+      const current_name = item['company_name']
+      const current_cnpj = item['company_cnpj']
+      const current_responsible = item['company_responsible']
+
+      const current_company: CreateCompanyDto = {
+        company_name: current_name,
+        company_cnpj: current_cnpj,
+        company_responsible: current_responsible
+      }
+
+
+      await this.create(current_company)
+
+
+    }
+
+
+    return {
+      data,
+      status: 'Empresas importadas com sucesso!'
+    }
+
+
+  }
+
+
+
 }
