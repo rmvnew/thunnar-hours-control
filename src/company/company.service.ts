@@ -195,6 +195,22 @@ export class CompanyService {
 
 
 
+  async delete(id: string) {
+
+    const company_is_registered = await this.companyRepository.findOne({
+      where: {
+        company_id: id
+      }
+    })
+
+    if (!company_is_registered) {
+      throw new NotFoundException(`Empresa não encontrada!`)
+    }
+
+    await this.companyRepository.remove(company_is_registered)
+
+  }
+
 
   async processExcel(file: Express.Multer.File): Promise<any> {
 
