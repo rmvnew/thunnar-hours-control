@@ -151,7 +151,6 @@ export class UserController {
   ): Promise<Pagination<UserEntity>> {
 
 
-
     filter.route = getUserPath();
     return this.userService.findAll(req, filter);
   }

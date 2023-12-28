@@ -73,6 +73,9 @@ export class Bootstrap {
 
         if (!userHaveData) {
 
+            let list_companies = []
+            list_companies.push(current_company)
+
             setTimeout(() => {
 
                 const user: CreateUserDto = {
@@ -81,7 +84,7 @@ export class Bootstrap {
                     user_password: process.env.SYSADMIN_PASS,
                     user_profile_id: currentProfile.profile_id,
                     user_date_of_birth: '01/01/1970',
-                    company_id: current_company.company_id
+                    company_ids: list_companies
                 }
 
 

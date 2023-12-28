@@ -15,5 +15,7 @@ export class UpdateUserDto {
     @ApiProperty()
     user_date_of_birth: string
 
+    @ApiProperty()
+    company_ids: string[]
 
 }

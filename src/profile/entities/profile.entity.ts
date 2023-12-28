@@ -1,5 +1,5 @@
 import { UserEntity } from "src/user/entities/user.entity";
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 
 
@@ -13,7 +13,7 @@ export class ProfileEntity {
     @Column()
     profile_name: string
 
-    @OneToOne(() => UserEntity, (user) => user.profile)
+    @OneToMany(() => UserEntity, (user) => user.profile)
     users: UserEntity[];
 
 }

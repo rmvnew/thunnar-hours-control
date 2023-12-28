@@ -25,7 +25,7 @@ export class CreateUserDto {
     user_crp?: string;
 
     @ApiProperty()
-    company_id: string
+    company_ids: string[]
 
 
 

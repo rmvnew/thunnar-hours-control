@@ -51,11 +51,12 @@ export class UserService {
         user_email,
         user_password,
         user_date_of_birth,
-        company_id
+        company_ids
       } = createUserDto
 
 
-      if (!company_id) {
+
+      if (company_ids.length <= 0) {
         throw new BadGatewayException(`Id da empresa não foi informado!`)
       }
 
@@ -90,6 +91,7 @@ export class UserService {
 
       const userIsRegistered = await this.findByName(user.user_name)
 
+
       if (userIsRegistered) {
         throw new BadRequestException(`user already registered`)
       }
@@ -107,17 +109,31 @@ export class UserService {
         throw new NotFoundException(`Perfil não encontrado`)
       }
 
-      const current_company = await this.companyService.findById(company_id)
+      let companies = []
+
+      for (let comp of company_ids) {
 
 
-      if (!current_company) {
-        throw new NotFoundException(`Empresa não encontrada!`)
+        const current_company = await this.companyService.findById(comp)
+
+
+        if (!current_company) {
+          throw new NotFoundException(`Empresa não encontrada!`)
+        }
+
+        companies.push(current_company)
+
       }
+
+
 
       user.profile = profile
       user.user_status = true
       user.user_first_access = true
-      user.company = current_company
+      user.companys = companies
+
+
+      console.log(user);
 
       const dateParts = user_date_of_birth.split("/");
       user.user_date_of_birth = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
@@ -145,15 +161,17 @@ export class UserService {
       const { sort, orderBy, user_name, showActives, page, limit } = filter;
 
 
-      const current_company_id = req.user.company_id
+
+
 
       let userQuery = this.userRepository.createQueryBuilder('user')
-        .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.companys', 'company')
         .leftJoinAndSelect('user.profile', 'profile')
         .leftJoinAndSelect('user.employee_config', 'config')
 
+      const ids = req.user.company_ids
       if (req.user.profile !== 1) {
-        userQuery = userQuery.andWhere('company.company_id = :id', { id: current_company_id })
+        userQuery = userQuery.andWhere('company.company_id IN (:...ids)', { ids })
       }
 
       const user = await userQuery
@@ -200,7 +218,7 @@ export class UserService {
     try {
       return this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.companys', 'company')
         .where('user.user_email = :user_email', { user_email: email })
         .getOne()
 
@@ -212,15 +230,16 @@ export class UserService {
 
   async findUserByEmail(req: RequestWithUser, email: string) {
     try {
-      const current_company_id = req.user.company_id
+
 
       let userQuery = this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.companys', 'company')
         .where('user.user_email = :user_email', { user_email: email })
 
+      const ids = req.user.company_ids
       if (req.user.profile !== 1) {
-        userQuery = userQuery.andWhere('company.company_id = :id', { id: current_company_id })
+        userQuery = userQuery.andWhere('company.company_id IN (:...ids)', { ids })
       }
 
       const user = await userQuery
@@ -251,15 +270,16 @@ export class UserService {
 
     try {
 
-      const current_company_id = req.user.company_id
+
 
       let userQuery = await this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.companys', 'company')
         .leftJoinAndSelect('user.employee_config', 'config')
 
+      const ids = req.user.company_ids
       if (req.user.profile !== 1) {
-        userQuery = userQuery.andWhere('company.company_id = :id', { id: current_company_id })
+        userQuery = userQuery.andWhere('company.company_id IN (:...ids)', { ids })
       }
 
       const user = await userQuery
@@ -295,7 +315,7 @@ export class UserService {
 
       return this.userRepository.createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.company', 'company')
+        .leftJoinAndSelect('user.companys', 'company')
         .select([
           'user.user_id',
           'user.user_name',
@@ -326,8 +346,14 @@ export class UserService {
         user_email,
         user_profile_id: profile_id,
         user_date_of_birth,
+        company_ids
 
       } = updateUserDto
+
+
+      if ((updateUserDto as any).user_password) {
+        throw new BadRequestException(`A atualização da senha não é permitida através desta rota.`);
+      }
 
       const isRegistered = await this.findById(req, id)
 
@@ -363,13 +389,30 @@ export class UserService {
 
       }
 
+      if (company_ids.length > 0) {
+
+        let companies = []
+
+        for (let id of company_ids) {
+
+          const current_company = await this.companyService.findById(id)
+          companies.push(current_company)
+          user.companys = companies
+
+        }
+
+      }
+
+
       if (profile_id) {
 
         const profile = await this.profileService.findById(profile_id)
 
+
         if (!profile) {
           throw new NotFoundException(`Perfil não encontrado`)
         }
+
         user.profile = profile
       }
 
@@ -400,7 +443,7 @@ export class UserService {
       throw new NotFoundException(`User does not exist`)
     }
 
-    await this.userRepository.delete(id)
+    await this.userRepository.remove(isRegistered)
 
 
   }
@@ -416,9 +459,6 @@ export class UserService {
       }
 
       const { user_status: status } = userSaved
-
-      console.log(userSaved);
-
 
       userSaved.user_status = status === true ? false : true
 

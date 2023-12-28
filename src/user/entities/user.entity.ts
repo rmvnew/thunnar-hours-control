@@ -1,7 +1,7 @@
 import { EmployeeConfig } from 'src/employee-config/entities/employee-config.entity';
 import { HoursControl } from 'src/hours-control/entities/hours-control.entity';
 import { ProfileEntity } from "src/profile/entities/profile.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Company } from './../../company/entities/company.entity';
 
 @Entity('USER')
@@ -40,7 +40,7 @@ export class UserEntity {
     @Column()
     user_first_access: boolean
 
-    @OneToOne(() => ProfileEntity, (profile) => profile.users)
+    @ManyToOne(() => ProfileEntity, (profile) => profile.users)
     @JoinColumn({ name: 'user_profile_id' })
     profile: ProfileEntity
 
@@ -56,11 +56,19 @@ export class UserEntity {
     @OneToMany(() => HoursControl, hour => hour.user)
     hours_control: HoursControl[];
 
-    @ManyToOne(() => Company, company => company.users)
-    @JoinColumn({
-        name: 'company_id'
+    @ManyToMany(() => Company, company => company.users)
+    @JoinTable({
+        name: 'COMPANY_USERS',
+        joinColumn: {
+            name: 'user_id',
+            referencedColumnName: 'user_id'
+        },
+        inverseJoinColumn: {
+            name: 'company_id',
+            referencedColumnName: 'company_id'
+        }
     })
-    company: Company
+    companys: Company[]
 
     @OneToOne(() => EmployeeConfig, employee => employee.user)
     employee_config: EmployeeConfig;

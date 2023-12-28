@@ -8,6 +8,7 @@ https://docs.nestjs.com/modules
 
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CompanyModule } from 'src/company/company.module';
 import { UserEntity } from 'src/user/entities/user.entity';
 import { UserModule } from 'src/user/user.module';
 import { AuthService } from './shared/auth.service';
@@ -18,6 +19,7 @@ import { LocalStrategy } from './shared/strategies/local.strategy';
 @Module({
     imports: [
         ConfigModule,
+        CompanyModule,
         UserModule,
         PassportModule,
         JwtModule.register({

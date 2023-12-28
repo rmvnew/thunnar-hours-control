@@ -1,5 +1,5 @@
 import { UserEntity } from "src/user/entities/user.entity";
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 
 @Entity('COMPANY')
@@ -26,7 +26,7 @@ export class Company {
     @Column()
     is_active: boolean
 
-    @OneToMany(() => UserEntity, user => user.company)
+    @ManyToMany(() => UserEntity, user => user.companys)
     users: UserEntity[];
 
 
