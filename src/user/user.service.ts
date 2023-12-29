@@ -89,6 +89,7 @@ export class UserService {
         user.user_name, 'Name', 5, 40
       )
 
+
       const userIsRegistered = await this.findByName(user.user_name)
 
 
@@ -110,6 +111,8 @@ export class UserService {
       }
 
       let companies = []
+
+
 
       for (let comp of company_ids) {
 
@@ -133,7 +136,7 @@ export class UserService {
       user.companys = companies
 
 
-      console.log(user);
+
 
       const dateParts = user_date_of_birth.split("/");
       user.user_date_of_birth = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));

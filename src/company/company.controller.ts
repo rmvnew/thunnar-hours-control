@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import AccessProfile from 'src/auth/enums/permission.type';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
@@ -85,6 +86,15 @@ export class CompanyController {
     return this.companyService.findAll(filter);
   }
 
+
+
+  @Post('excel')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadExcelFile(@UploadedFile() file: Express.Multer.File) {
+    return this.companyService.processExcel(file);
+  }
+
+
   @Get(':id')
   @UseGuards(PermissionGuard(AccessProfile.ADMIN))
   @ApiOperation({
@@ -149,4 +159,28 @@ export class CompanyController {
   async changeStatus(@Param('id') id: string) {
     return this.companyService.changeStatus(id);
   }
+
+
+  @Delete(':id')
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @ApiOperation({
+    summary: 'Deletar uma empresa.',
+    description: `# Esta rota deleta uma empresa.
+    Tipo: Autenticada. 
+    Acesso: [Administrador]`,
+  })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: `#### ID do Registro para Atualização.
+    Este parâmetro é obrigatório e deve ser fornecido na URL da requisição. 
+    Ele identifica unicamente o registro que será atualizado. 
+    Forneça o ID do registro específico que você deseja atualizar. 
+    A identificação correta garante que as alterações sejam aplicadas ao registro apropriado.`,
+  })
+
+  async delete(@Param('id') id: string) {
+    this.companyService.delete(id)
+  }
+
 }

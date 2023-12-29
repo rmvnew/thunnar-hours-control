@@ -40,11 +40,12 @@ export class Bootstrap {
                     profile_name: prof
                 }
 
-                if (profile.profile_name === 'ADMIN') {
-                    currentProfile = profile
-                }
 
-                await this.profileService.create(profile)
+                const res = await this.profileService.create(profile)
+
+                if (res.profile_name === 'ADMIN') {
+                    currentProfile = res
+                }
 
             } else {
 
@@ -74,7 +75,7 @@ export class Bootstrap {
         if (!userHaveData) {
 
             let list_companies = []
-            list_companies.push(current_company)
+            list_companies.push(current_company.company_id)
 
             setTimeout(() => {
 
@@ -86,8 +87,6 @@ export class Bootstrap {
                     user_date_of_birth: '01/01/1970',
                     company_ids: list_companies
                 }
-
-
 
                 this.userService.create(user)
             }, 2000);
