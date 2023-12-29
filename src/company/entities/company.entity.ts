@@ -11,17 +11,17 @@ export class Company {
     @Column()
     company_name: string
 
-    @Column()
+    @Column({ unique: true })
     company_cnpj: string
 
     @Column()
     company_responsible: string
 
     @CreateDateColumn()
-    create_at: Date
+    create_at: string
 
     @UpdateDateColumn()
-    update_at: Date
+    update_at: string
 
     @Column()
     is_active: boolean
