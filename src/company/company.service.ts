@@ -1,7 +1,8 @@
-import { BadGatewayException, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SortingType } from 'src/common/Enums';
 import { Utils } from 'src/common/Utils';
+import { CustomDate } from 'src/common/custom.date';
 import { customPagination } from 'src/common/pagination/custom.pagination';
 import { Equal, Not, Repository } from 'typeorm';
 import * as XLSX from 'xlsx';
@@ -13,6 +14,8 @@ import { Company } from './entities/company.entity';
 @Injectable()
 export class CompanyService {
 
+  private readonly logger = new Logger(CompanyService.name)
+
   constructor(
     @InjectRepository(Company)
     private readonly companyRepository: Repository<Company>
@@ -20,37 +23,83 @@ export class CompanyService {
 
   async create(createCompanyDto: CreateCompanyDto) {
 
-    const { company_name: name, company_cnpj } = createCompanyDto
 
-    const company_is_registered = await this.findByName(name.toLocaleUpperCase())
+    try {
 
-    if (company_is_registered) {
-      throw new BadRequestException(`A empresa ${name} já está cadastrada!`)
-    }
+      const { company_name: name, company_cnpj } = createCompanyDto
 
-    const current_company = this.companyRepository.create(createCompanyDto)
-    current_company.is_active = true
-    current_company.company_name = name.toLocaleUpperCase()
 
-    if (company_cnpj) {
-      const result_cnpj = Utils.getInstance().validateCNPJ(company_cnpj)
-      if (result_cnpj.status || (name.toUpperCase() === process.env.DEFAULT_COMPANY)) {
-        current_company.company_cnpj = result_cnpj.cnpj
-      } else {
-        throw new BadGatewayException(`Cnpj Inválido: ${company_cnpj}`)
+      const checkCnpj = await this.findCnpjInOtherCompany(company_cnpj, name)
+
+      if (checkCnpj) {
+        throw new BadRequestException(`O cnpj ${company_cnpj} já está cadastrado`)
       }
+
+
+      const company_is_registered = await this.findByName(name.toLocaleUpperCase())
+
+      if (company_is_registered) {
+        throw new BadRequestException(`A empresa ${name} já está cadastrada!`)
+      }
+
+      const current_company = this.companyRepository.create(createCompanyDto)
+      current_company.is_active = true
+      current_company.company_name = name.toLocaleUpperCase()
+      current_company.create_at = CustomDate.getInstance().newAmDate()
+      current_company.update_at = CustomDate.getInstance().newAmDate()
+
+      if (company_cnpj) {
+        const result_cnpj = Utils.getInstance().validateCNPJ(company_cnpj)
+        if (result_cnpj.status || (name.toUpperCase() === process.env.DEFAULT_COMPANY)) {
+          current_company.company_cnpj = result_cnpj.cnpj
+        } else {
+          throw new BadGatewayException(`Cnpj Inválido: ${company_cnpj}`)
+        }
+      }
+
+      return this.companyRepository.save(current_company);
+
+    } catch (error) {
+      this.logger.error(`createCompany error: ${error.message}`, error.stack);
+      throw error
     }
 
-    return this.companyRepository.save(current_company);
+  }
+
+  async findCnpjInOtherCompany(cnpj: string, name: string) {
+
+    try {
+
+      const sanitizedCNPJ = cnpj.replace(/[^\d]+/g, '');
+
+      return this.companyRepository.findOne({
+        where: {
+          company_cnpj: sanitizedCNPJ,
+          company_name: Not(Equal(name))
+        }
+      })
+
+    } catch (error) {
+      this.logger.error(`createCompany error: ${error.message}`, error.stack);
+      throw error
+    }
+
+
+
   }
 
   async findByName(name: string) {
-    return this.companyRepository.findOne({
+
+
+    const res = await this.companyRepository.findOne({
       where: {
         company_name: name,
         is_active: Not(Equal(false)),
       }
     })
+
+
+    return res
   }
 
   async haveCompany(name: string) {
@@ -132,12 +181,17 @@ export class CompanyService {
   }
 
   async findById(id: string) {
-    return this.companyRepository.findOne({
+
+
+    const res = await this.companyRepository.findOne({
       where: {
         company_id: id,
         is_active: Not(Equal(false)),
       }
     })
+
+
+    return res
   }
 
   async update(id: string, updateCompanyDto: UpdateCompanyDto) {
@@ -150,6 +204,13 @@ export class CompanyService {
     }
 
     const { company_name, company_cnpj } = updateCompanyDto
+
+
+    const checkCnpj = await this.findCnpjInOtherCompany(company_cnpj, company_name)
+
+    if (checkCnpj) {
+      throw new BadRequestException(`O cnpj ${company_cnpj} já está cadastrado`)
+    }
 
     const current_company = await this.companyRepository.preload({
       company_id: id,
@@ -168,6 +229,8 @@ export class CompanyService {
         throw new BadGatewayException(`Cnpj Inválido: ${company_cnpj}`)
       }
     }
+
+    current_company.update_at = CustomDate.getInstance().newAmDate()
 
     return this.companyRepository.save(current_company)
   }
