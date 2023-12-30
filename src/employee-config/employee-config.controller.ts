@@ -17,12 +17,12 @@ export class EmployeeConfigController {
   constructor(private readonly employeeConfigService: EmployeeConfigService) { }
 
   @Post()
-  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
   @ApiOperation({
     summary: 'Criar a configuração do funcionário.',
     description: `# Esta rota adiciona uma nova configuração para o usuário.
     Tipo: Autenticada. 
-    Acesso: [Administrador]` })
+    Acesso: [Administrador,Gerente,Proprietário]` })
 
   @ApiBody({
     description: '## Schema padrão para criar configuração do usuário.',
@@ -36,12 +36,12 @@ export class EmployeeConfigController {
   }
 
   @Get()
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
   @ApiOperation({
     summary: 'Buscar todas Configurações.',
     description: `# Esta rota busca todas configurações dos usuários.
     Tipo: Autenticada. 
-    Acesso: [Administrador ]` })
+    Acesso: [Administrador,Gerente,Proprietário]` })
 
   @ApiQuery({
     name: 'page',
@@ -80,10 +80,11 @@ export class EmployeeConfigController {
   @ApiQuery({ name: 'user_name', required: false, description: '### Este é um filtro opcional!' })
   @ApiQuery({ name: 'company_id', required: true, description: '### Id da empresa.' })
   async findAll(
-    @Query('company_id', ParseUUIDPipe) company_id: string,
+    // @Query('company_id', ParseUUIDPipe) company_id: string,
+    @Req() req: RequestWithUser,
     @Query() filter: EmployeeFilter
   ) {
-    return this.employeeConfigService.findAllAdmin(company_id, filter);
+    return this.employeeConfigService.findAllAdmin(req, filter);
   }
 
   @Get(':id')

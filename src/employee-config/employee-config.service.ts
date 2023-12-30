@@ -63,6 +63,8 @@ export class EmployeeConfigService {
         ValidType.SIMPLE_HOUR
       )
 
+
+
     const config_is_registered = await this.getUserWithConfig(company_id, user_id)
 
     if (config_is_registered) {
@@ -70,6 +72,7 @@ export class EmployeeConfigService {
     }
 
     const config = this.employeeConfigRepository.create(createEmployeeConfigDto)
+
     const user = await this.userService.findById(req, user_id)
     config.user = user
     config.work_Monday = work_Monday ? true : false
@@ -86,7 +89,7 @@ export class EmployeeConfigService {
 
   }
 
-  async findAllAdmin(company_id: string, filter: EmployeeFilter) {
+  async findAllAdmin(req: RequestWithUser, filter: EmployeeFilter) {
 
     const { user_name, orderBy, sort, page, limit } = filter
 
@@ -111,11 +114,42 @@ export class EmployeeConfigService {
       current_limit = limit
     }
 
-    const queryBuilder = this.employeeConfigRepository.createQueryBuilder('emp')
+    let config = this.employeeConfigRepository.createQueryBuilder('emp')
       .leftJoinAndSelect('emp.user', 'user')
-      .leftJoinAndSelect('user.company', 'company')
+      .leftJoinAndSelect('user.companys', 'company')
       .where('emp.is_active = true')
-      .andWhere('company.company_id = :company_id', { company_id })
+
+    const ids = req.user.company_ids
+
+
+
+    if (req.user.profile !== 1) {
+      config = config.andWhere('company.company_id IN (:...ids)', { ids })
+    }
+
+    const queryBuilder = await config
+      .select([
+        'emp.employee_config_morning_entrance',
+        'emp.employee_config_morning_departure',
+        'emp.employee_config_afternoon_entrance',
+        'emp.employee_config_afternoon_departure',
+        'emp.work_Monday',
+        'emp.work_Tuesday',
+        'emp.work_Wednesday',
+        'emp.work_Thursday',
+        'emp.work_Friday',
+        'emp.work_Saturday',
+        'emp.work_Sunday',
+        'emp.create_at',
+        'emp.update_at',
+        'emp.is_active',
+        'user.user_id',
+        'user.user_name',
+        'company.company_id',
+        'company.company_name',
+
+      ])
+
 
 
 
@@ -130,7 +164,7 @@ export class EmployeeConfigService {
     if (current_orderBy == SortingType.DATE) {
       queryBuilder.orderBy('emp.create_at', `${current_sort === 'DESC' ? 'DESC' : 'ASC'}`);
     } else {
-      queryBuilder.orderBy('emp.company_name', `${current_sort === 'DESC' ? 'DESC' : 'ASC'}`);
+      queryBuilder.orderBy('user.user_name', `${current_sort === 'DESC' ? 'DESC' : 'ASC'}`);
     }
 
     const res = await queryBuilder.getMany()
@@ -143,7 +177,7 @@ export class EmployeeConfigService {
 
     const res = await this.employeeConfigRepository.createQueryBuilder('config')
       .leftJoinAndSelect('config.user', 'user')
-      .leftJoinAndSelect('user.company', 'company')
+      .leftJoinAndSelect('user.companys', 'company')
       .where('user.user_id = :user_id', { user_id })
       .andWhere('company.company_id = :company_id', { company_id })
       .getOne()
@@ -155,7 +189,7 @@ export class EmployeeConfigService {
   async findOne(company_id: string, id: string) {
     const res = await this.employeeConfigRepository.createQueryBuilder('config')
       .leftJoinAndSelect('config.user', 'user')
-      .leftJoinAndSelect('user.company', 'company')
+      .leftJoinAndSelect('user.companys', 'company')
       .where('config.employee_config_id = :id', { id })
       .andWhere('company.company_id = :company_id', { company_id })
       .getOne()
