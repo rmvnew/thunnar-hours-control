@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import AccessProfile from 'src/auth/enums/permission.type';
 import { CompanyGuard } from 'src/auth/shared/guards/employeeCompany.guard';
@@ -8,12 +10,15 @@ import { PublicRoute } from 'src/common/decorators/public_route.decorator';
 import { RecoverInterface } from 'src/common/interfaces/recover.interface';
 import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { getUserPath } from 'src/common/routes.path';
+import { ExcelService } from 'src/common/userFake';
 import { FilterUser } from './dto/Filter.user';
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserByUploadDto } from './dto/create.user.upload';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user.response.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserService } from './user.service';
+
 
 
 @Controller('user')
@@ -23,7 +28,10 @@ import { UserService } from './user.service';
 // @ApiExcludeEndpoint()
 
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(
+    private readonly userService: UserService,
+    private readonly excelService: ExcelService
+  ) { }
 
   @Post()
   @UseGuards(PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
@@ -43,7 +51,44 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Post('excel')
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
+  @ApiOperation({
+    summary: 'Criar usuários por upload de Excel.',
+    description: `# Esta rota permite criar múltiplos usuários através do upload de um arquivo Excel.
+    Tipo: Autenticada. 
+    Acesso: [Administrador, Gerente, Proprietário]` })
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: '## O arquivo Excel com os dados dos usuários e o ID da empresa.',
+    type: CreateUserByUploadDto, // Esta classe DTO deve representar a estrutura do arquivo e outros campos que são enviados juntos
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadExcelFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('company_id') company_id: string
+  ) {
 
+
+
+    return this.userService.createUserByUpload(file, company_id);
+  }
+
+
+  @Get('excel')
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  async downloadExcel(
+    @Res() res: Response,
+    @Query('quantity') quantity: number
+  ) {
+
+    const buffer = this.excelService.generateExcel(quantity);
+
+    res.setHeader('Content-Disposition', 'attachment; filename=users.xlsx');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return res.status(HttpStatus.OK).send(buffer);
+  }
 
   // @Get()
   // @UseGuards(PermissionGuard(AccessProfile.ADMIN))
@@ -214,6 +259,7 @@ export class UserController {
 
     return this.userService.findUserByEmail(req, email)
   }
+
 
 
 

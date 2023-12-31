@@ -40,13 +40,14 @@ export class Validations {
             }
 
             if (data === ValidType.NO_SPECIAL_CHARACTER) {
-                if (this.validRegex(/[!@#$%^&*(),.?":{}|<>-]/g, str)) {
+                if (this.validRegex(/[!@#$%^&*(),?":{}|<>-]/g, str)) {
                     throw new BadRequestException(`O nome ${str}, não pode conter caracteres especiais!!`)
                 }
             }
 
+
             if (data === ValidType.IS_EMAIL) {
-                if (!this.validRegex(/^[a-z0-9.]+@[a-z0-9]+\.[a-z]+/i, str)) {
+                if (!this.validRegex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i, str)) {
                     throw new BadRequestException('O email informado não é válido!!')
                 }
             }

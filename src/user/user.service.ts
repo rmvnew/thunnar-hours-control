@@ -14,6 +14,7 @@ import { CompanyService } from 'src/company/company.service';
 import { MailService } from 'src/mail/mail.service';
 import { ProfileService } from 'src/profile/profile.service';
 import { Repository } from 'typeorm';
+import * as XLSX from 'xlsx';
 import { FilterUser } from './dto/Filter.user';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -670,6 +671,92 @@ export class UserService {
 
 
 
+  async createUserByUpload(file: Express.Multer.File, company_id: string): Promise<any> {
+
+
+    try {
+
+      const workbook = XLSX.read(file.buffer, { type: 'buffer' });
+      const sheetNames = workbook.SheetNames;
+      const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetNames[0]]);
+
+      for (let item of data) {
+
+
+        const current_user_name = item['user_name']
+        const current_user_email = item['user_email']
+        const current_user_password = item['user_password']
+        const current_user_profile_id = item['user_profile_id']
+        const current_user_date_of_birth = item['user_date_of_birth']
+
+        if (
+          current_user_name === null ||
+          current_user_name === '' ||
+          current_user_name.Length <= 5
+        ) {
+          throw new BadRequestException(`O nome deve ter ao menos 6 caracteres!`)
+        }
+
+        if (
+          current_user_email === null ||
+          current_user_email === '' ||
+          current_user_email.Length <= 9
+        ) {
+          throw new BadRequestException(`O email deve ter ao menos 6 caracteres!`)
+        }
+
+        if (
+          current_user_password === null ||
+          current_user_password === ''
+        ) {
+          throw new BadRequestException(`A senha não pode ser em branco!`)
+        }
+
+        if (
+          current_user_profile_id === null ||
+          current_user_profile_id === ''
+        ) {
+          throw new BadRequestException(`O perfil deve ser informado`)
+        }
+
+        if (
+          current_user_date_of_birth === null ||
+          current_user_date_of_birth === ''
+        ) {
+          throw new BadRequestException(`A data de nascimento não pode ser em branco!`)
+        }
+
+        let ids = []
+
+        ids.push(company_id)
+
+
+        const new_user: CreateUserDto = {
+          user_name: current_user_name,
+          user_email: current_user_email,
+          user_password: current_user_password,
+          user_profile_id: current_user_profile_id,
+          user_date_of_birth: current_user_date_of_birth,
+          company_ids: ids
+        }
+
+        await this.create(new_user)
+
+
+      }
+
+
+      return {
+        data,
+        status: 'Usuarios importadas com sucesso!'
+      }
+
+    } catch (error) {
+      this.logger.error(`createUserByUpload error: ${error.message}`, error.stack)
+      throw error
+    }
+
+  }
 
 
 

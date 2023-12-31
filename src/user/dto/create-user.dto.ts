@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, Length } from 'class-validator';
+import { IsNotEmpty, Length } from 'class-validator';
 
 export class CreateUserDto {
 
@@ -20,9 +20,6 @@ export class CreateUserDto {
 
     @ApiProperty()
     user_date_of_birth: string;
-
-    @IsOptional()
-    user_crp?: string;
 
     @ApiProperty()
     company_ids: string[]

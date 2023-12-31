@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ExcelService } from 'src/common/userFake';
 import { CompanyModule } from 'src/company/company.module';
 import { EmailModule } from 'src/mail/mail.module';
 import { ProfileModule } from 'src/profile/profile.module';
@@ -18,7 +19,7 @@ import { UserService } from './user.service';
 
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, ExcelService],
   exports: [UserService]
 })
 export class UserModule { }

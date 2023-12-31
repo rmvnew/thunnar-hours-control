@@ -88,12 +88,12 @@ export class EmployeeConfigController {
   }
 
   @Get(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_USER_MANAGER_OWNER))
   @ApiOperation({
     summary: 'Buscar configuração por Id.',
     description: `# Esta rota busca um usuário pelo Id.
     Tipo: Autenticada. 
-    Acesso: [Administrador]` })
+    Acesso: [Todos]` })
   @ApiParam({ name: 'id', description: 'Id da configuração. ' })
   @ApiQuery({ name: 'company_id', required: true, description: '### Id da empresa.' })
   async findOne(
@@ -104,12 +104,12 @@ export class EmployeeConfigController {
   }
 
   @Put(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
   @ApiOperation({
     summary: 'Atualizar uma configuração.',
     description: `# Esta rota atualiza a configuração usuário pelo Id.
     Tipo: Autenticada. 
-    Acesso: [Administrador]` })
+    Acesso: [Administrador,Gerente,Proprietário]` })
   @ApiParam({ name: 'id', description: 'Id da configuração. ' })
   @ApiBody({
     description: '## Schema padrão para atualizar uma configuração. ',
@@ -123,12 +123,12 @@ export class EmployeeConfigController {
   }
 
   @Delete(':id')
-  @UseGuards(PermissionGuard(AccessProfile.ADMIN))
+  @UseGuards(PermissionGuard(AccessProfile.ADMIN_OWNER))
   @ApiOperation({
     summary: 'Deletar a configuração do usuário',
     description: `# Esta rota deleta a configuração de um usuário pelo Id.
     Tipo: Autenticada. 
-    Acesso: [Administrador]` })
+    Acesso: [Administrador,Proprietário]` })
   @ApiParam({ name: 'id', description: '### Id da configuração. ' })
   @ApiQuery({ name: 'company_id', required: true, description: '### Id da empresa.' })
   async remove(
