@@ -7,26 +7,29 @@ export class HoursControl {
     @PrimaryGeneratedColumn('uuid')
     hours_control_id: string;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ type: 'time', nullable: true })
     hours_control_morning_entrance: string | null;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ type: 'time', nullable: true })
     hours_control_morning_departure: string | null;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ type: 'time', nullable: true })
     hours_control_afternoon_entrance: string | null;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ type: 'time', nullable: true })
     hours_control_afternoon_departure: string | null;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ type: 'time', nullable: true })
     hours_control_extra_entrance: string | null;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ type: 'time', nullable: true })
     hours_control_extra_exit: string | null;
 
     @Column({ type: 'time', nullable: true })
     delay: string;
+
+    @Column({ nullable: true })
+    delay_minuts: number;
 
     @Column({ type: 'time', nullable: true })
     lack: string;

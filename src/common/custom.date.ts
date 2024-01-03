@@ -15,8 +15,14 @@ export class CustomDate {
 
     newAmDate() {
 
-        return moment().tz('America/Manaus').format();
+        return moment().tz('America/Manaus').format('HH:mm');
     }
+
+
+    customNewAmDate(time: string) {
+        return moment(time).tz('America/Manaus').format('HH:mm');
+    }
+
 
     newSPDate() {
 

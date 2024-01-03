@@ -180,6 +180,19 @@ export class EmployeeConfigService {
       .leftJoinAndSelect('user.companys', 'company')
       .where('user.user_id = :user_id', { user_id })
       .andWhere('company.company_id = :company_id', { company_id })
+      .select([
+        'config.employee_config_morning_entrance',
+        'config.employee_config_morning_departure',
+        'config.employee_config_afternoon_entrance',
+        'config.employee_config_afternoon_departure',
+        'config.work_Monday',
+        'config.work_Tuesday',
+        'config.work_Wednesday',
+        'config.work_Thursday',
+        'config.work_Friday',
+        'config.work_Saturday',
+        'config.work_Sunday',
+      ])
       .getOne()
 
     return res
