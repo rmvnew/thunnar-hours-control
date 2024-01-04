@@ -129,6 +129,7 @@ export class EmployeeConfigService {
 
     const queryBuilder = await config
       .select([
+        'emp.employee_config_id',
         'emp.employee_config_morning_entrance',
         'emp.employee_config_morning_departure',
         'emp.employee_config_afternoon_entrance',
@@ -181,6 +182,7 @@ export class EmployeeConfigService {
       .where('user.user_id = :user_id', { user_id })
       .andWhere('company.company_id = :company_id', { company_id })
       .select([
+        'config.employee_config_id',
         'config.employee_config_morning_entrance',
         'config.employee_config_morning_departure',
         'config.employee_config_afternoon_entrance',

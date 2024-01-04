@@ -51,7 +51,7 @@ export class HoursControlController {
   lunchHour(
 
   ) {
-    return this.hoursControlService.checkLunchHour();
+    this.hoursControlService.checkLunchHour();
   }
 
   @Get(':id')

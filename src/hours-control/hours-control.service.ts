@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { endOfDay, startOfDay } from 'date-fns';
 import * as moment from 'moment-timezone';
@@ -160,8 +161,6 @@ export class HoursControlService {
 
     const ids = req.user.company_ids
 
-    console.log(ids);
-
 
     if (req.user.profile !== 1) {
 
@@ -211,7 +210,12 @@ export class HoursControlService {
 
 
 
+
+  @Cron('0 15 * * *')
   async checkLunchHour() {
+
+
+    Logger.warn(`Cron Job executed in ${new Date()}`)
 
     const startOfDay = moment().tz('America/Manaus').startOf('day').toISOString();
     const endOfDay = moment().tz('America/Manaus').endOf('day').toISOString();
@@ -248,14 +252,45 @@ export class HoursControlService {
 
       const config = await this.employeeConfigService.getUserWithConfig(current_company_id, current_user_id)
 
-      // console.log(config);
+      // console.log(config.employee_config_morning_departure);
+
+      const current_moning_entrace = data.hours_control_morning_entrance
+
+      const current_moning_departure = data.hours_control_morning_departure
+
+      const config_moning_departure = config.employee_config_morning_departure
+
+      const current_now = CustomDate.getInstance().newAmDate()
+
+      let now_parts = current_now.split(':')
+
+      const now_hour = Number(now_parts[0])
+
+      //^ Aqui verifico se são mais de 14 horas e se o ponto de 
+      //^ entrada foi registrado e se teve saida para o almoço registrada. 
+      const valid_register = (now_hour > 14) &&
+        (current_moning_entrace !== null) &&
+        !current_moning_departure
 
 
-      return {
-        company_id: current_company_id,
-        user_id: current_user_id,
-        user_name: current_user_name
+      if (valid_register) {
+
+        data.hours_control_morning_departure = config_moning_departure
+
+        await this.houerControlRepository.save(data)
+
+        Logger.log(`morning departure auto update`)
+
+      } else {
+        Logger.warn('Fora do horario!!')
       }
+
+
+      // return {
+      //   company_id: current_company_id,
+      //   user_id: current_user_id,
+      //   user_name: current_user_name
+      // }
 
     })
 
