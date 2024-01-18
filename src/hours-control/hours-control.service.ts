@@ -3,7 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { endOfDay, startOfDay } from 'date-fns';
 import * as moment from 'moment-timezone';
-import { SortingType } from 'src/common/Enums';
+import { RegisterPointType, SortingType, SumType } from 'src/common/Enums';
 import { CustomDate } from 'src/common/custom.date';
 import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { customPagination } from 'src/common/pagination/custom.pagination';
@@ -12,11 +12,15 @@ import { UserService } from 'src/user/user.service';
 import { Repository } from 'typeorm';
 import { CreateHoursControlDto } from './dto/create-hours-control.dto';
 import { HourControlFilter } from './dto/hour_control.filter';
+import { PointRegisterDto } from './dto/point-register.dto';
 import { UpdateHoursControlDto } from './dto/update-hours-control.dto';
 import { HoursControl } from './entities/hours-control.entity';
 
 @Injectable()
 export class HoursControlService {
+
+
+  private readonly logger = new Logger(HoursControlService.name)
 
   constructor(
     @InjectRepository(HoursControl)
@@ -54,80 +58,204 @@ export class HoursControlService {
 
   }
 
-  async pointRecord(req: RequestWithUser, id: string) {
+  async pointRecord(req: RequestWithUser, dto: PointRegisterDto) {
 
-    const user_is_registered = await this.userService.findById(req, id)
+    try {
 
-    if (!user_is_registered) {
-      throw new BadRequestException(`Usuário não existe`)
-    }
+      const { user_id, point_type } = dto
 
-    const today = new Date();
-    //^ Isso irá pegar apenas a parte da data
-    const dateAsString = today.toISOString().split('T')[0];
+      const user_is_registered = await this.userService.findById(req, user_id)
 
-
-    const startOfToday = startOfDay(today);
-    const endOfToday = endOfDay(today);
-
-    const have_todays_record = await this.houerControlRepository.createQueryBuilder('hour')
-      .leftJoinAndSelect('hour.user', 'user')
-      .where('user.user_id = :userId', { userId: id })
-      .andWhere('hour.create_at BETWEEN :startOfDay AND :endOfDay', {
-        startOfDay: startOfToday,
-        endOfDay: endOfToday
-      })
-      .getOne();
-
-
-    if (!have_todays_record) {
-
-      const hours_control: CreateHoursControlDto = {
-        hours_control_morning_entrance: CustomDate.getInstance().newAmDate(),
-        user_id: id
+      if (!user_is_registered) {
+        throw new BadRequestException(`Usuário não existe`)
       }
-      const today = await this.create(req, hours_control)
+
+      const today = new Date();
+      //^ Isso irá pegar apenas a parte da data
+      const dateAsString = today.toISOString().split('T')[0];
 
 
-    } else {
+      const startOfToday = startOfDay(today);
+      const endOfToday = endOfDay(today);
 
-      //^ Já tem hora agora temos que verificar o que já está registrado 
-      const {
-        hours_control_morning_departure,
-        hours_control_afternoon_entrance,
-        hours_control_afternoon_departure,
-        hours_control_extra_entrance,
-        hours_control_extra_exit
-      } = have_todays_record
+      const have_todays_record = await this.houerControlRepository.createQueryBuilder('hour')
+        .leftJoinAndSelect('hour.user', 'user')
+        .leftJoinAndSelect('user.companys', 'company')
+        .where('user.user_id = :userId', { userId: user_id })
+        .andWhere('hour.create_at BETWEEN :startOfDay AND :endOfDay', {
+          startOfDay: startOfToday,
+          endOfDay: endOfToday
+        })
+        .getOne();
 
-      if (!hours_control_morning_departure) {
-        //~ Se não tiver saida da manhã vamos registrar 
-        have_todays_record.hours_control_morning_departure = CustomDate.getInstance().newAmDate()
-      } else if (!hours_control_afternoon_entrance) {
-        //~ Se não tiver entrada da tarde vamos registrar 
-        have_todays_record.hours_control_afternoon_entrance = CustomDate.getInstance().newAmDate()
-      } else if (!hours_control_afternoon_departure) {
-        //~ Se não tiver saida da tarde vamos registrar 
-        have_todays_record.hours_control_afternoon_departure = CustomDate.getInstance().newAmDate()
-      } else if (!hours_control_extra_entrance) {
-        //~ Se não tiver entrada da extra vamos registrar 
-        have_todays_record.hours_control_extra_entrance = CustomDate.getInstance().newAmDate()
-      } else if (!hours_control_extra_exit) {
-        //~ Se não tiver saida da extra vamos registrar 
-        have_todays_record.hours_control_extra_exit = CustomDate.getInstance().newAmDate()
+
+
+      if (!have_todays_record) {
+
+        const hours_control: CreateHoursControlDto = {
+          hours_control_morning_entrance: CustomDate.getInstance().newAmDate(),
+          user_id: user_id
+        }
+        return await this.create(req, hours_control)
+
+
       } else {
-        console.log(have_todays_record);
-        return null
+
+
+        const {
+          hours_control_morning_entrance,
+          hours_control_morning_departure,
+          hours_control_afternoon_entrance,
+          hours_control_afternoon_departure,
+          hours_control_extra_entrance,
+          hours_control_extra_exit
+        } = have_todays_record
+
+
+        if (point_type === RegisterPointType.MORNING_DEPARTURE) {
+
+          //^ Se não tiver saida da manhã vamos registrar 
+          if (!hours_control_morning_departure) {
+            have_todays_record.hours_control_morning_departure = CustomDate.getInstance().newAmDate()
+          } else {
+
+            return {
+              status: 'Saida da manhã já foi registrada'
+            }
+
+          }
+
+        } else if (point_type === RegisterPointType.AFTERNOON_ENTRANCE) {
+
+          //^ Se não tiver entrada da tarde vamos registrar 
+          if (!hours_control_afternoon_entrance) {
+            have_todays_record.hours_control_afternoon_entrance = CustomDate.getInstance().newAmDate()
+          } else {
+
+            return {
+              status: 'Entrada da tarde já foi registrada'
+            }
+
+          }
+
+        } else if (point_type === RegisterPointType.AFTERNOON_DEPARTURE) {
+
+          const morning_status = !hours_control_morning_entrance ||
+            !hours_control_morning_departure
+
+          if (morning_status) {
+
+            throw new BadRequestException(`Entrada ou saida da manhã não encontrada!`)
+
+          } else {
+
+            //^ Se não tiver saida da tarde vamos registrar 
+
+            if (!hours_control_afternoon_departure) {
+
+              this.checkDeparture(have_todays_record)
+
+              const current_departure = `${CustomDate.getInstance().newAmDate()}:00`
+
+              have_todays_record.hours_control_afternoon_departure = current_departure
+
+
+            }
+            // else {
+
+
+
+
+            //   return {
+
+            //     status: 'Saida da tarde já foi registrada'
+
+            //   }
+
+            // }
+
+          }
+
+        } else if (point_type === RegisterPointType.EXTRA_ENTRANCE) {
+
+          //^ Se não tiver entrada da extra vamos registrar 
+
+          if (!hours_control_extra_entrance) {
+            have_todays_record.hours_control_extra_entrance = CustomDate.getInstance().newAmDate()
+          } else {
+
+            return {
+              status: 'Entrada da extra já foi registrada'
+            }
+
+          }
+
+        } else if (point_type === RegisterPointType.EXTRA_DEPARTURE) {
+
+          //^ Se não tiver saida da extra vamos registrar 
+          if (!hours_control_extra_exit) {
+            have_todays_record.hours_control_extra_exit = CustomDate.getInstance().newAmDate()
+          } else {
+
+            return {
+              status: 'Saida da extra já foi registrada'
+            }
+
+          }
+
+        } else {
+
+          this.logger.log('Entrada da manhã já foi registrada!');
+
+          return {
+            status: 'Entrada da manhã já foi registrada!'
+          }
+
+        }
+
+        const current_today = await this.houerControlRepository.save(have_todays_record)
+
+
+        await this.sumResult(current_today)
+
+
+        return current_today
+
       }
 
-      await this.houerControlRepository.save(have_todays_record)
-
-
+    } catch (error) {
+      this.logger.error(`point register error: ${error.message}`, error.stack);
+      throw error
     }
 
 
 
   }
+
+
+
+
+
+  async checkDeparture(have_todays_record: HoursControl) {
+
+    const current_company_id = have_todays_record.user.companys[0].company_id
+    const user_id = have_todays_record.user.user_id
+    const current_config = await this.employeeConfigService
+      .getUserWithConfig(current_company_id, user_id)
+
+    const default_departured = current_config.employee_config_afternoon_entrance
+
+    if (!have_todays_record.hours_control_afternoon_entrance) {
+
+      have_todays_record.hours_control_afternoon_entrance = default_departured
+
+      this.houerControlRepository.save(have_todays_record)
+
+    }
+
+  }
+
+
 
   async findAll(req: RequestWithUser, filter: HourControlFilter) {
 
@@ -209,13 +337,12 @@ export class HoursControlService {
   }
 
 
-
-
-  @Cron('0 15 * * *')
+  // @Cron('0 15 * * *')
+  @Cron('35 16 * * *')
   async checkLunchHour() {
 
-
-    Logger.warn(`Cron Job executed in ${new Date()}`)
+    this.logger.debug(` ..::| Cron Job started |::.. `)
+    this.logger.log(`\n${new Date()}\n`)
 
     const startOfDay = moment().tz('America/Manaus').startOf('day').toISOString();
     const endOfDay = moment().tz('America/Manaus').endOf('day').toISOString();
@@ -239,20 +366,13 @@ export class HoursControlService {
       .getMany()
 
 
-
-
     const usersPromises = allRegistersToday.map(async (data: any) => {
 
-
       const current_user_id = data.user.user_id
-      const current_user_name = data.user.user_name
+
       const current_company_id = data.user.companys[0].company_id
 
-
-
       const config = await this.employeeConfigService.getUserWithConfig(current_company_id, current_user_id)
-
-      // console.log(config.employee_config_morning_departure);
 
       const current_moning_entrace = data.hours_control_morning_entrance
 
@@ -272,7 +392,6 @@ export class HoursControlService {
         (current_moning_entrace !== null) &&
         !current_moning_departure
 
-
       if (valid_register) {
 
         data.hours_control_morning_departure = config_moning_departure
@@ -285,27 +404,11 @@ export class HoursControlService {
         Logger.warn('Fora do horario!!')
       }
 
-
-      // return {
-      //   company_id: current_company_id,
-      //   user_id: current_user_id,
-      //   user_name: current_user_name
-      // }
-
     })
 
     const user = await Promise.all(usersPromises)
 
-
-
-
-    //~ pegar a config para cada um e verificar a hora
-
-
     return user
-
-
-
 
   }
 
@@ -313,44 +416,144 @@ export class HoursControlService {
 
     //^ Aqui vamos verificar se an entrada o funcionário teve atraso. 
 
+    // //~ Aqui é a hora que o colaborador bateu 
+    // const entrance_hour = res.hours_control_morning_entrance
+
+    // //~ Aqui é a hora que o colaborador deve bater 
+    // const entrance_base = res.user.employee_config.employee_config_morning_entrance
+
+    // let baseDate = new Date();
+
+    // //~ quebrando a string com a hora da batida 
+    // let partsEntranceHour = entrance_hour.split(":");
+    // //~ gerando uma nova data com a batida do colaborador 
+    // let dateEntranceHour = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), Number(partsEntranceHour[0]), Number(partsEntranceHour[1]));
+
+    // //~ quebrando a string com a hora que ele deve bater
+    // let partsEntranceBase = entrance_base.split(":");
+    // //~ gerando uma nova data com a hora que ele deve bater
+    // let dateEntranceBase = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), Number(partsEntranceBase[0]), Number(partsEntranceBase[1]), Number(partsEntranceBase[2]));
+
+    // // Calculate the difference in milliseconds
+    // let difference = Number(dateEntranceHour) - Number(dateEntranceBase);
+
+    // // Convert the difference to minutes
+    // let differenceInMinutes = difference / (1000 * 60);
+
+
+    // if (differenceInMinutes > 1) {
+
+    //   let hours = Math.floor(differenceInMinutes / 60);
+    //   let minutes = Math.abs(differenceInMinutes % 60);
+
+    //   const current_hours = `${hours}`.padStart(2, '0')
+    //   const current_minuts = `${minutes}`.padStart(2, '0')
+
+    //   res.delay_minuts = differenceInMinutes
+    //   res.delay = `${current_hours}:${current_minuts}`
+
+    //   await this.houerControlRepository.save(res)
+
+    // }
+
+
+
+
     //~ Aqui é a hora que o colaborador bateu 
     const entrance_hour = res.hours_control_morning_entrance
 
     //~ Aqui é a hora que o colaborador deve bater 
     const entrance_base = res.user.employee_config.employee_config_morning_entrance
 
-    let baseDate = new Date();
 
-    //~ quebrando a string com a hora da batida 
-    let partsEntranceHour = entrance_hour.split(":");
-    //~ gerando uma nova data com a batida do colaborador 
-    let dateEntranceHour = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), Number(partsEntranceHour[0]), Number(partsEntranceHour[1]));
+    const differenceInMinutes = await this.calculateDifference(entrance_hour, entrance_base, SumType.MORNING)
 
-    //~ quebrando a string com a hora que ele deve bater
-    let partsEntranceBase = entrance_base.split(":");
-    //~ gerando uma nova data com a hora que ele deve bater
-    let dateEntranceBase = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), Number(partsEntranceBase[0]), Number(partsEntranceBase[1]), Number(partsEntranceBase[2]));
-
-    // Calculate the difference in milliseconds
-    let difference = Number(dateEntranceHour) - Number(dateEntranceBase);
-
-    // Convert the difference to minutes
-    let differenceInMinutes = difference / (1000 * 60);
+    const minuts = differenceInMinutes.delay_minuts
 
 
-    if (differenceInMinutes > 1) {
+    if (minuts > 1) {
 
-      let hours = Math.floor(differenceInMinutes / 60);
-      let minutes = Math.abs(differenceInMinutes % 60);
+      let hours = Math.floor(minuts / 60);
+      let minutes = Math.abs(minuts % 60);
 
       const current_hours = `${hours}`.padStart(2, '0')
       const current_minuts = `${minutes}`.padStart(2, '0')
 
-      res.delay_minuts = differenceInMinutes
+      res.delay_minuts = minuts
       res.delay = `${current_hours}:${current_minuts}`
 
       await this.houerControlRepository.save(res)
 
+    }
+
+  }
+
+  async sumResult(current_today: HoursControl) {
+
+
+    const current_company_id = current_today.user.companys[0].company_id
+    const user_id = current_today.user.user_id
+
+    const current_config = await this.employeeConfigService
+      .getUserWithConfig(current_company_id, user_id)
+
+    const current_departure = current_today.hours_control_afternoon_departure
+    const default_departure = current_config.employee_config_afternoon_departure
+
+
+
+    const differenceInMinutes = await this.calculateDifference(default_departure, current_departure, SumType.AFTERNOON)
+
+    const minuts = differenceInMinutes.delay_minuts
+
+    let hours = Math.floor(minuts / 60);
+    let minutes = Math.abs(minuts % 60);
+
+    const current_hours = `${hours}`.padStart(2, '0')
+    const current_minuts = `${minutes}`.padStart(2, '0')
+
+    // ~ falta ver esse calculo aqui direitinho
+
+    if (minuts > 1) {
+
+
+      await this.houerControlRepository.save(current_today)
+
+    } else if (minuts < 0) {
+
+      current_today.delay_minuts = minuts * (-1)
+      current_today.delay = `${current_hours}:${current_minuts}`
+      await this.houerControlRepository.save(current_today)
+
+    }
+
+
+  }
+
+
+  async calculateDifference(first_hour: string, second_hour: string, sumType: SumType) {
+    //^ Aqui vamos verificar se an entrada o funcionário teve atraso. 
+
+
+
+    let baseDate = new Date();
+
+    let parts_first_hour = first_hour.split(":");
+    let current_first_hour = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), Number(parts_first_hour[0]), Number(parts_first_hour[1]));
+
+    let parts_second_hour = second_hour.split(":");
+    let current_second_hour = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), Number(parts_second_hour[0]), Number(parts_second_hour[1]), Number(parts_second_hour[2]));
+
+    let difference = Number(current_first_hour) - Number(current_second_hour);
+
+    if (sumType == SumType.AFTERNOON) {
+      difference = difference * (-1)
+    }
+
+    let differenceInMinutes = difference / (1000 * 60);
+
+    return {
+      delay_minuts: differenceInMinutes
     }
 
   }

@@ -1,11 +1,13 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import AccessProfile from 'src/auth/enums/permission.type';
 import { CompanyGuard } from 'src/auth/shared/guards/employeeCompany.guard';
 import { PermissionGuard } from 'src/auth/shared/guards/permission.guard';
+import { RegisterPointType } from 'src/common/Enums';
 import { RequestWithUser } from 'src/common/interfaces/user.request.interface';
 import { CreateHoursControlDto } from './dto/create-hours-control.dto';
 import { HourControlFilter } from './dto/hour_control.filter';
+import { PointRegisterDto } from './dto/point-register.dto';
 import { UpdateHoursControlDto } from './dto/update-hours-control.dto';
 import { HoursControlService } from './hours-control.service';
 
@@ -35,14 +37,21 @@ export class HoursControlController {
     return this.hoursControlService.findAll(req, filter);
   }
 
-  @Post('/point/:id')
+  @Post('/point')
+  @ApiQuery({ name: 'point_type', enum: RegisterPointType })
   @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_USER_MANAGER_OWNER))
   async pointRegister(
     @Req() req: RequestWithUser,
-    @Param('id') id: string
+    @Query('point_type') point_type: RegisterPointType,
+    @Query('user_id') user_id: string,
   ) {
 
-    return this.hoursControlService.pointRecord(req, id)
+    const dto: PointRegisterDto = {
+      point_type,
+      user_id
+    }
+
+    return this.hoursControlService.pointRecord(req, dto)
 
   }
 

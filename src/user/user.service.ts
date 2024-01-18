@@ -1,7 +1,6 @@
 import { BadGatewayException, BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToClass } from 'class-transformer';
-// import { faker } from '@faker-js/faker';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { SortingType, ValidType } from 'src/common/Enums';
 import { Utils } from 'src/common/Utils';
@@ -23,6 +22,7 @@ import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
+
 
 
 
@@ -232,39 +232,27 @@ export class UserService {
     }
   }
 
-  async findUserByEmail(req: RequestWithUser, email: string) {
+  async haveUser(name: string) {
+
     try {
 
+      const isUserExists = await this.userRepository.findOne({
+        where: {
+          user_name: name.toUpperCase()
+        }
+      })
 
-      let userQuery = this.userRepository.createQueryBuilder('user')
-        .leftJoinAndSelect('user.profile', 'profile')
-        .leftJoinAndSelect('user.companys', 'company')
-        .where('user.user_email = :user_email', { user_email: email })
-
-      const ids = req.user.company_ids
-      if (req.user.profile !== 1) {
-        userQuery = userQuery.andWhere('company.company_id IN (:...ids)', { ids })
+      if (isUserExists) {
+        return true
+      } else {
+        return false
       }
 
-      const user = await userQuery
-        .select([
-          'user.user_id',
-          'user.user_name',
-          'user.user_email',
-          'user.user_status',
-          'profile.profile_name',
-          'company.company_id',
-          'company.company_name',
-          'company.company_cnpj',
-        ])
-        .getOne();
-
-      return user;
-
     } catch (error) {
-      this.logger.error(`findByEmail error: ${error.message}`, error.stack)
-      throw error;
+      this.logger.error(`haveAdmin error: ${error.message}`, error.stack)
+      throw error
     }
+
   }
 
 
@@ -570,28 +558,28 @@ export class UserService {
 
 
 
-  async haveAdmin(name: string) {
+  // async haveAdmin(name: string) {
 
-    try {
+  //   try {
 
-      const admin = await this.userRepository.findOne({
-        where: {
-          user_name: name.toUpperCase()
-        }
-      })
+  //     const admin = await this.userRepository.findOne({
+  //       where: {
+  //         user_name: name.toUpperCase()
+  //       }
+  //     })
 
-      if (admin) {
-        return true
-      } else {
-        return false
-      }
+  //     if (admin) {
+  //       return true
+  //     } else {
+  //       return false
+  //     }
 
-    } catch (error) {
-      this.logger.error(`haveAdmin error: ${error.message}`, error.stack)
-      throw error
-    }
+  //   } catch (error) {
+  //     this.logger.error(`haveAdmin error: ${error.message}`, error.stack)
+  //     throw error
+  //   }
 
-  }
+  // }
 
 
   async recoverCode(email: string) {
@@ -599,22 +587,21 @@ export class UserService {
     try {
       const user = await this.findByEmail(email)
 
-
       if (!user) {
         throw new NotFoundException(`O email informado é inválido!`)
       }
 
+      const currentdate = new Date()
+      const day: string = String(currentdate.getDate()).padStart(2, '0')
+      const month: string = String(currentdate.getMonth() + 1).padStart(2, '0')
+      const year: number = currentdate.getFullYear()
 
-      const currentDate = this.getCurrentDate()
-
-
-
+      const currentDate = `${year}-${month}-${day}`
 
       const code = this.generateCode()
 
       user.user_recovery_code = code
       user.user_recovery_date = new Date()
-
 
       await this.userRepository.save(user)
 
@@ -624,34 +611,20 @@ export class UserService {
         email: user.user_email
       }
 
-
-
       this.mailservice.sendMail(codeRecover)
 
       setTimeout(async () => {
         await this.clearCode(user)
       }, 5 * 60 * 1000)
 
-
     } catch (error) {
       this.logger.error(`recoverCode error: ${error.message}`, error.stack);
       throw error
     }
 
-
   }
 
 
-  getCurrentDate() {
-
-    const currentdate = new Date()
-    const day: string = String(currentdate.getDate()).padStart(2, '0')
-    const month: string = String(currentdate.getMonth() + 1).padStart(2, '0')
-    const year: number = currentdate.getFullYear()
-
-    return `${year}-${month}-${day}`
-
-  }
 
   async clearCode(user: UserEntity) {
     user.user_recovery_code = null
@@ -757,16 +730,6 @@ export class UserService {
     }
 
   }
-
-
-
-
-
-
-
-
-
-
 
 }
 

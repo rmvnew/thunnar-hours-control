@@ -90,61 +90,6 @@ export class UserController {
     return res.status(HttpStatus.OK).send(buffer);
   }
 
-  // @Get()
-  // @UseGuards(PermissionGuard(AccessProfile.ADMIN))
-
-  // @ApiOperation({
-  //   summary: 'Buscar todos usuários.',
-  //   description: `# Esta rota busca todos usuários.
-  //   Tipo: Autenticada. 
-  //   Acesso: [Administrador]` })
-
-  // @ApiQuery({
-  //   name: 'page',
-  //   required: false,
-  //   description: `### Número da Página. 
-  //   Define o número da página de resultados a ser retornada. 
-  //   Utilize este parâmetro para navegar através das páginas de resultados. 
-  //   O número da página deve ser um inteiro positivo.`,
-  // })
-
-  // @ApiQuery({
-  //   name: 'limit',
-  //   required: false,
-  //   description: `### Limite de Itens por Página. 
-  //   Especifica o número máximo de itens a serem exibidos em uma única página. 
-  //   Utilize este parâmetro para limitar a quantidade de dados retornados, 
-  //   facilitando a visualização e a navegação.`,
-  // })
-
-  // @ApiQuery({
-  //   name: 'sort',
-  //   required: false,
-  //   description: `### Direção da Ordenação. 
-  //   Determina a direção da ordenação dos resultados. 
-  //   Aceita os valores 'ASC' para ordenação crescente e 'DESC' para decrescente. 
-  //   Este parâmetro é geralmente combinado com o 'orderBy' para definir 
-  //   a ordem dos resultados de forma eficaz.`,
-  // })
-
-  // @ApiQuery({
-  //   name: 'orderBy',
-  //   required: false,
-  //   description: `### Campo de Ordenação. 
-  //   Especifica o atributo pelo qual os resultados devem ser ordenados.`,
-  // })
-  // @ApiQuery({ name: 'user_name', required: false, description: '### Este é um filtro opcional!' })
-  // async findAllAdmin(
-
-  //   @Query() filter: FilterUser
-  // ): Promise<Pagination<UserEntity>> {
-
-  //   filter.route = getUserPath();
-  //   return this.userService.findAllAdmin(filter);
-  // }
-
-
-
 
   @Get('/all')
   @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
@@ -242,25 +187,6 @@ export class UserController {
     return this.userService.recoverCode(email)
 
   }
-
-
-  @Get('/userEmail')
-  @UseGuards(CompanyGuard, PermissionGuard(AccessProfile.ADMIN_MANAGER_OWNER))
-  @ApiOperation({
-    summary: 'Buscar usuário por email.',
-    description: `# Esta rota busca um usuário pelo email.
-    Tipo: Autenticada. 
-    Acesso: [Todos]` })
-  @ApiParam({ name: 'email', description: '### E-mail de cadastro do usuário. ' })
-  async getUserByEmail(
-    @Req() req: RequestWithUser,
-    @Query('email') email: string
-  ) {
-
-    return this.userService.findUserByEmail(req, email)
-  }
-
-
 
 
   /**

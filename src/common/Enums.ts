@@ -8,6 +8,21 @@ export enum SqlType {
     NORMAL = 'NORMAL'
 }
 
+export enum RegisterPointType {
+    MORNING_ENTRANCE = 'MORNING_ENTRANCE',
+    MORNING_DEPARTURE = 'MORNING_DEPARTURE',
+    AFTERNOON_ENTRANCE = 'AFTERNOON_ENTRANCE',
+    AFTERNOON_DEPARTURE = 'AFTERNOON_DEPARTURE',
+    EXTRA_ENTRANCE = 'EXTRA_ENTRANCE',
+    EXTRA_DEPARTURE = 'EXTRA_DEPARTURE'
+}
+
+
+export enum SumType {
+    MORNING = 'MORNING',
+    AFTERNOON = 'AFTERNOON'
+}
+
 export enum SortingType {
     ID = 'ID',
     NAME = 'NAME',

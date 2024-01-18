@@ -21,7 +21,7 @@ export class Bootstrap {
     async onApplicationBootstrap() {
 
 
-        const userHaveData = await this.userService.haveAdmin('sysadmin')
+        let list_companies = []
 
         const haveCompany = await this.companyService.haveCompany(process.env.DEFAULT_COMPANY)
 
@@ -39,7 +39,6 @@ export class Bootstrap {
                 const profile: CreateProfileDto = {
                     profile_name: prof
                 }
-
 
                 const res = await this.profileService.create(profile)
 
@@ -67,31 +66,61 @@ export class Bootstrap {
 
             current_company = await this.companyService.create(company)
 
+            list_companies.push(current_company.company_id)
+
+
+        } else {
+
+            list_companies.push(haveCompany.company_id)
 
 
         }
 
 
-        if (!userHaveData) {
+        const users = [
+            {
+                name: process.env.DEFAULT_USER_NAME,
+                email: process.env.DEFAULT_USER_EMAIL,
+                date_of_birth: '01/01/1970'
+            }, {
+                name: 'sysadmin',
+                email: 'sysadmin@email.com',
+                date_of_birth: '01/01/1970'
+            }
+        ]
 
-            let list_companies = []
-            list_companies.push(current_company.company_id)
 
-            setTimeout(() => {
+
+
+        users.forEach(async data => {
+
+            const userHaveData = await this.userService.haveUser(data.name.toUpperCase())
+
+            if (!userHaveData) {
 
                 const user: CreateUserDto = {
-                    user_name: 'sysadmin',
-                    user_email: 'sysadmin@email.com',
-                    user_password: process.env.SYSADMIN_PASS,
+                    user_name: data.name.toUpperCase(),
+                    user_email: data.email,
+                    user_password: process.env.DEFAULT_USER_PASS,
                     user_profile_id: currentProfile.profile_id,
-                    user_date_of_birth: '01/01/1970',
+                    user_date_of_birth: data.date_of_birth,
                     company_ids: list_companies
+
                 }
 
                 this.userService.create(user)
-            }, 2000);
 
-        }
+            }
+
+
+
+        })
+
+
+
+
+
+
 
 
     }

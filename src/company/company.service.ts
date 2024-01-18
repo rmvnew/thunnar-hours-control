@@ -103,18 +103,14 @@ export class CompanyService {
   }
 
   async haveCompany(name: string) {
-    const res = await this.companyRepository.findOne({
+    return this.companyRepository.findOne({
       where: {
         company_name: name,
         is_active: Not(Equal(false)),
       }
     })
 
-    if (res) {
-      return true
-    } else {
-      return false
-    }
+
   }
 
   async findAll(filter: CompanyFilter) {

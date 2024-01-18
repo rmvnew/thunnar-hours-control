@@ -12,10 +12,12 @@ import { EmailModule } from './mail/mail.module';
 import { ProfileModule } from './profile/profile.module';
 import { UserModule } from './user/user.module';
 
+import { ScheduleModule } from '@nestjs/schedule';
 import { EmployeeConfigModule } from './employee-config/employee-config.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     AuthModule,
     ConfigModule,
     UserModule,
