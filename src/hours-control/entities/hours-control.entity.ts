@@ -20,16 +20,16 @@ export class HoursControl {
     hours_control_afternoon_departure: string | null;
 
     @Column({ type: 'time', nullable: true })
-    hours_control_extra_entrance: string | null;
+    hours_control_extra: string | null;
 
     @Column({ type: 'time', nullable: true })
-    hours_control_extra_exit: string | null;
+    hours_control_extra_minuts: number | null;
 
     @Column({ type: 'time', nullable: true })
-    delay: string;
+    hours_control_delay: string;
 
     @Column({ nullable: true })
-    delay_minuts: number;
+    hours_control_delay_minuts: number;
 
     @Column({ type: 'time', nullable: true })
     lack: string;

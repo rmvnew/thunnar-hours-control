@@ -15,7 +15,11 @@ export class CustomDate {
 
     newAmDate() {
 
-        return moment().tz('America/Manaus').format('HH:mm');
+        return {
+            date: moment().tz('America/Manaus'),
+            hour: moment().tz('America/Manaus').format('HH:mm')
+
+        }
     }
 
 

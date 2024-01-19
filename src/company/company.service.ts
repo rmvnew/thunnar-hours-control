@@ -45,8 +45,8 @@ export class CompanyService {
       const current_company = this.companyRepository.create(createCompanyDto)
       current_company.is_active = true
       current_company.company_name = name.toLocaleUpperCase()
-      current_company.create_at = CustomDate.getInstance().newAmDate()
-      current_company.update_at = CustomDate.getInstance().newAmDate()
+      current_company.create_at = CustomDate.getInstance().newAmDate().date.toISOString()
+      current_company.update_at = CustomDate.getInstance().newAmDate().date.toISOString()
 
       if (company_cnpj) {
         const result_cnpj = Utils.getInstance().validateCNPJ(company_cnpj)
@@ -57,7 +57,10 @@ export class CompanyService {
         }
       }
 
+
+
       return this.companyRepository.save(current_company);
+
 
     } catch (error) {
       this.logger.error(`createCompany error: ${error.message}`, error.stack);
@@ -226,7 +229,7 @@ export class CompanyService {
       }
     }
 
-    current_company.update_at = CustomDate.getInstance().newAmDate()
+    current_company.update_at = CustomDate.getInstance().newAmDate().date.toISOString()
 
     return this.companyRepository.save(current_company)
   }

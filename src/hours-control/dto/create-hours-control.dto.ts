@@ -17,13 +17,13 @@ export class CreateHoursControlDto {
     hours_control_afternoon_departure?: string | null;
 
     @ApiProperty({ required: false })
-    hours_control_extra_entrance?: string | null;
+    hours_control_extra?: string | null;
 
     @ApiProperty({ required: false })
-    hours_control_extra_exit?: string | null;
+    hours_control_extra_minuts?: number | null;
 
     @ApiProperty({ required: false })
-    delay?: string;
+    hours_control_delay?: string;
 
     @ApiProperty({ required: false })
     lack?: string;

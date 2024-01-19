@@ -21,10 +21,9 @@ export class Bootstrap {
     async onApplicationBootstrap() {
 
 
-        let list_companies = []
 
-        const haveCompany = await this.companyService.haveCompany(process.env.DEFAULT_COMPANY)
-
+        //^ Profile 
+        //~ Start register 
 
         let currentProfile = null
 
@@ -54,6 +53,20 @@ export class Bootstrap {
             }
         }
 
+
+        //~ End register
+
+        //? #######| ** |####### 
+
+        //^ Company 
+        //~ Start register 
+
+        let list_companies = []
+
+        const haveCompany = await this.companyService.haveCompany(process.env.DEFAULT_COMPANY)
+
+
+
         let current_company: Company = null
 
         if (!haveCompany) {
@@ -75,6 +88,11 @@ export class Bootstrap {
 
 
         }
+
+        //~ End register 
+
+        //^ Users 
+        //~ Start register 
 
 
         const users = [
@@ -117,7 +135,7 @@ export class Bootstrap {
         })
 
 
-
+        //~ End register
 
 
 

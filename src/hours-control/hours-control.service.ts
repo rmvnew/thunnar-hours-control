@@ -40,10 +40,11 @@ export class HoursControlService {
     current_hour_control.hours_control_morning_departure = null
     current_hour_control.hours_control_afternoon_entrance = null
     current_hour_control.hours_control_afternoon_departure = null
-    current_hour_control.hours_control_extra_entrance = null
-    current_hour_control.hours_control_extra_exit = null
+    current_hour_control.hours_control_extra = null
+    current_hour_control.hours_control_extra_minuts = 0
     current_hour_control.lack = null
-    current_hour_control.delay = null
+    current_hour_control.hours_control_delay = null
+    current_hour_control.hours_control_delay_minuts = 0
     current_hour_control.to_compensate = null
 
     const user = await this.userService.findById(req, user_id)
@@ -93,7 +94,7 @@ export class HoursControlService {
       if (!have_todays_record) {
 
         const hours_control: CreateHoursControlDto = {
-          hours_control_morning_entrance: CustomDate.getInstance().newAmDate(),
+          hours_control_morning_entrance: CustomDate.getInstance().newAmDate().hour,
           user_id: user_id
         }
         return await this.create(req, hours_control)
@@ -107,8 +108,8 @@ export class HoursControlService {
           hours_control_morning_departure,
           hours_control_afternoon_entrance,
           hours_control_afternoon_departure,
-          hours_control_extra_entrance,
-          hours_control_extra_exit
+          hours_control_extra,
+          hours_control_extra_minuts
         } = have_todays_record
 
 
@@ -116,7 +117,7 @@ export class HoursControlService {
 
           //^ Se não tiver saida da manhã vamos registrar 
           if (!hours_control_morning_departure) {
-            have_todays_record.hours_control_morning_departure = CustomDate.getInstance().newAmDate()
+            have_todays_record.hours_control_morning_departure = CustomDate.getInstance().newAmDate().hour
           } else {
 
             return {
@@ -129,7 +130,7 @@ export class HoursControlService {
 
           //^ Se não tiver entrada da tarde vamos registrar 
           if (!hours_control_afternoon_entrance) {
-            have_todays_record.hours_control_afternoon_entrance = CustomDate.getInstance().newAmDate()
+            have_todays_record.hours_control_afternoon_entrance = CustomDate.getInstance().newAmDate().hour
           } else {
 
             return {
@@ -173,33 +174,6 @@ export class HoursControlService {
             //   }
 
             // }
-
-          }
-
-        } else if (point_type === RegisterPointType.EXTRA_ENTRANCE) {
-
-          //^ Se não tiver entrada da extra vamos registrar 
-
-          if (!hours_control_extra_entrance) {
-            have_todays_record.hours_control_extra_entrance = CustomDate.getInstance().newAmDate()
-          } else {
-
-            return {
-              status: 'Entrada da extra já foi registrada'
-            }
-
-          }
-
-        } else if (point_type === RegisterPointType.EXTRA_DEPARTURE) {
-
-          //^ Se não tiver saida da extra vamos registrar 
-          if (!hours_control_extra_exit) {
-            have_todays_record.hours_control_extra_exit = CustomDate.getInstance().newAmDate()
-          } else {
-
-            return {
-              status: 'Saida da extra já foi registrada'
-            }
 
           }
 
@@ -380,7 +354,7 @@ export class HoursControlService {
 
       const config_moning_departure = config.employee_config_morning_departure
 
-      const current_now = CustomDate.getInstance().newAmDate()
+      const current_now = CustomDate.getInstance().newAmDate().hour
 
       let now_parts = current_now.split(':')
 
@@ -479,8 +453,8 @@ export class HoursControlService {
       const current_hours = `${hours}`.padStart(2, '0')
       const current_minuts = `${minutes}`.padStart(2, '0')
 
-      res.delay_minuts = minuts
-      res.delay = `${current_hours}:${current_minuts}`
+      res.hours_control_delay_minuts = minuts
+      res.hours_control_delay = `${current_hours}:${current_minuts}`
 
       await this.houerControlRepository.save(res)
 
@@ -521,8 +495,8 @@ export class HoursControlService {
 
     } else if (minuts < 0) {
 
-      current_today.delay_minuts = minuts * (-1)
-      current_today.delay = `${current_hours}:${current_minuts}`
+      current_today.hours_control_delay_minuts = minuts * (-1)
+      current_today.hours_control_delay = `${current_hours}:${current_minuts}`
       await this.houerControlRepository.save(current_today)
 
     }
